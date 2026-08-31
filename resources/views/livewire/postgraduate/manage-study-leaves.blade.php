@@ -127,63 +127,92 @@
         </div>
     </div>
 
-    <!-- Main Table -->
-    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="font-size: 12px;">
-                    <thead class="bg-light text-secondary">
+<!-- Main Table -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-nowrap" style="font-size: 13px;">
+                    <thead class="text-white text-center "
+                    style="background: #111827 !important; border-bottom: 3px solid #3b82f6;">                    <tr>
+                        <th class="py-3 px-3">#</th>
+                        <th class="py-3 text-start ps-4">اسم المرشح</th>
+                        <th class="py-3">الوظيفة</th>
+                        <th class="py-3">الرقم القومي</th>
+                        <th class="py-3">نوع الدراسة</th>
+                        <th class="py-3">تاريخ القيد</th>
+                        <th class="py-3">اسم الجامعة</th>
+                        <th class="py-3">جهة العمل</th>
+                        <th class="py-3">موقف الدراسة</th>
+                        <th class="py-3">نوع إجازة التفرغ</th>
+                        <th class="py-3">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($registrations as $reg)
                         <tr>
-                            <th class="py-2 px-3">#</th>
-                            <th class="py-2">اسم المرشح</th>
-                            <th class="py-2">الوظيفة والتخصص</th>
-                            <th class="py-2">جهة العمل / الجامعة</th>
-                            <th class="py-2">رقم الموبايل</th>
-                            <th class="py-2 text-center">حالة التفرغ</th>
-                            <th class="py-2 text-center">الإجراءات</th>
+                            <td class="px-3 fw-bold text-muted text-center">{{ $loop->iteration + ($registrations->currentPage() - 1) * $registrations->perPage() }}</td>
+                            <td class="fw-bold text-dark text-start ps-4">{{ $reg->healthProfessional->name ?? 'غير محدد' }}</td>
+                            <td class="text-center"><span class="badge bg-light text-dark border px-2 py-1">{{ $reg->healthProfessional->profession ?? '-' }}</span></td>
+                            <td class="font-monospace text-center text-muted">{{ $reg->healthProfessional->national_id ?? '-' }}</td>
+                            <td class="text-center fw-medium text-secondary">{{ $reg->required_degree ?? '-' }}</td>
+                            <td class="font-monospace text-center text-muted">{{ $reg->registration_date ?? '-' }}</td>
+                            <td class="text-center">{{ $reg->required_university ?? '-' }}</td>
+                            <td class="text-center text-muted">{{ $reg->healthProfessional->secondment_facility ?? '-' }}</td>
+
+                            <!-- عمود موقف الدراسة -->
+                            <td class="text-center">
+                                @php
+                                    $status = $reg->study_status;
+                                    $badgeClass = 'bg-secondary-subtle text-secondary border';
+                                    if(str_contains($status, 'مستمر')) $badgeClass = 'bg-info-subtle text-info border border-info-subtle';
+                                    elseif(str_contains($status, 'حصل')) $badgeClass = 'bg-success-subtle text-success border border-success-subtle';
+                                    elseif(str_contains($status, 'اعتذار') || str_contains($status, 'إلغاء')) $badgeClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+                                @endphp
+                                <span class="badge {{ $badgeClass }} px-2.5 py-1 rounded-pill fw-normal">
+                                    {{ $status ?? 'غير محدد' }}
+                                </span>
+                            </td>
+
+                            <!-- نوع إجازة التفرغ -->
+                            <td class="text-center">
+                                @if($reg->study_leave_type === 'تفرغ بمرتب')
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill">بمرتب</span>
+                                @elseif($reg->study_leave_type === 'تفرغ بدون مرتب')
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1 rounded-pill">بدون مرتب</span>
+                                @else
+                                    <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill">{{ $reg->study_leave_type ?? 'بدون تفرغ' }}</span>
+                                @endif
+                            </td>
+
+                            <td class="text-center">
+                                <button type="button"
+                                        wire:click="openLeavesModal({{ $reg->id }})"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#leavesHistoryModal"
+                                        class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 shadow-none"
+                                        style="font-size: 11px;">
+                                    <i class="bi bi-gear-fill me-1"></i>الإدارة
+                                </button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($registrations as $reg)
-                            <tr>
-                                <td class="px-3 fw-bold text-muted">{{ $loop->iteration + ($registrations->currentPage() - 1) * $registrations->perPage() }}</td>
-                                <td class="fw-bold text-dark">{{ $reg->healthProfessional->name ?? 'غير محدد' }}</td>
-                                <td>{{ $reg->healthProfessional->job_title ?? $reg->study_program ?? '-' }}</td>
-                                <td>{{ $reg->university ?? $reg->healthProfessional->workplace ?? '-' }}</td>
-                                <td class="font-monospace text-primary fw-bold">{{ $reg->healthProfessional->phone ?? $reg->phone ?? '-' }}</td>
-                                <td class="text-center">
-                                    @if($reg->study_leave_type === 'تفرغ بمرتب')
-                                        <span class="badge bg-success-subtle text-success border border-success px-2 py-1 rounded-pill"><i class="bi bi-check-circle me-1"></i>تفرغ بمرتب</span>
-                                    @elseif($reg->study_leave_type === 'تفرغ بدون مرتب')
-                                        <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1 rounded-pill"><i class="bi bi-exclamation-circle me-1"></i>تفرغ بدون مرتب</span>
-                                    @else
-                                        <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 rounded-pill">بدون تفرغ</span>
-                                    @endif
-                                </td>
-                                <td class="text-center">
-                                    <button type="button"
-                                            wire:click="openLeavesModal({{ $reg->id }})"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#leavesHistoryModal"
-                                            class="btn btn-sm btn-primary rounded-2 py-1 px-2 shadow-sm"
-                                            style="font-size: 11px;">
-                                        <i class="bi bi-folder-symlink me-1"></i>إدارة الإجازات والتعديل
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">لا توجد نتائج مطابقة للبحث.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="p-2 border-top">
-                {{ $registrations->links() }}
-            </div>
+                    @empty
+                        <tr>
+                            <td colspan="11" class="text-center py-5 text-muted">
+                                <div class="py-4">
+                                    <i class="bi bi-inbox fs-1 text-secondary opacity-50 mb-2 d-block"></i>
+                                    لا توجد بيانات مطابقة للعرض حالياً.
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3 bg-light border-top d-flex justify-content-center">
+            {{ $registrations->links() }}
         </div>
     </div>
+</div>
 
     <!-- Modal 1: التفاصيل الكاملة للتفرغات المنتهية -->
     <div wire:ignore.self class="modal fade" id="expiringDetailsModal" tabindex="-1" aria-hidden="true">

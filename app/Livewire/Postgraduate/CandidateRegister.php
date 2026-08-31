@@ -247,6 +247,9 @@ class CandidateRegister extends Component
             'study_status' => 'مستمر',
         ]);
 
+
+
+
         session()->flash('success', 'تم تسجيل طلب الترشيح بنجاح.');
         return redirect()->route('postgraduate.search');
     }

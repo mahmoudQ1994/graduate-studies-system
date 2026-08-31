@@ -17,11 +17,12 @@ class HealthProfessional extends Model
     use HasFactory;
 
     protected $fillable = [
-        'national_id',
-        'name',
-        'phone',
-        'profession',
-        'facility_id',
+        'national_id',  // الرقم القومي
+        'name',     // الاسم
+        'phone',// رقم الهاتف
+        'profession',  //التخصصص
+        'facility_id', // معرف المنشأة/المستشفى
+        'secondment_facility'
     ];
 
     // العلاقة: الموظف ينتمي لمنشأة/مستشفى معينة

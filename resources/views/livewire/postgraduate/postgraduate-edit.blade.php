@@ -2,8 +2,13 @@
     <!-- عنوان الشاشة -->
     <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
-            <h5 class="fw-bold mb-1 text-primary"><i class="bi bi-person-plus-fill me-2"></i>تسجيل بيانات مرشح جديد</h5>
-            <p class="text-muted small mb-0">إدخال وترشيح كادر صحي لقيد دراسات عليا جديد</p>
+            <h5 class="fw-bold mb-1 text-primary"><i class="bi bi-pencil-square me-2"></i>تعديل بيانات مرشح دراسات عليا</h5>
+            <p class="text-muted small mb-0">تحديث بيانات الكادر الصحي وحركة القيد الخاصة به</p>
+        </div>
+        <div>
+            <a href="{{ route('postgraduate.candidates-list') }}" class="btn btn-outline-secondary btn-sm rounded-3">
+                <i class="bi bi-arrow-right me-1"></i> العودة للقائمة
+            </a>
         </div>
     </div>
 
@@ -48,31 +53,31 @@
         </div>
     </div>
 
-    <form wire:submit.prevent="save">
+    <form wire:submit.prevent="update">
 
         <!-- 1. البيانات الأساسية -->
         <div class="{{ $activeTab === 1 ? '' : 'd-none' }}">
             <div class="card border-0 shadow-sm rounded-3 mb-3">
                 <div class="card-header bg-white py-2 px-3 fw-bold text-primary small">
-                    <i class="bi bi-card-heading me-1"></i>بيانات الهوية والتحقق
+                    <i class="bi bi-card-heading me-1"></i>بيانات الهوية والتحقق (تعديل)
                 </div>
                 <div class="card-body p-3">
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label class="form-label fw-bold small mb-1">الرقم القومي (14 رقم) <span class="text-danger">*</span></label>
-                            <input type="text" wire:model.live.debounce.500ms="national_id" maxlength="14" class="form-control form-control-sm" placeholder="أدخل الرقم القومي">
+                            <input type="text" wire:model="national_id" maxlength="14" class="form-control form-control-sm">
                             @error('national_id') <span class="text-danger extra-small">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-5">
                             <label class="form-label fw-bold small mb-1">الاسم بالكامل <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="name" class="form-control form-control-sm" placeholder="الاسم ثلاثي أو رباعي">
+                            <input type="text" wire:model="name" class="form-control form-control-sm">
                             @error('name') <span class="text-danger extra-small">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="col-md-3">
                             <label class="form-label fw-bold small mb-1">رقم التليفون</label>
-                            <input type="text" wire:model="phone" class="form-control form-control-sm" placeholder="01xxxxxxxxx">
+                            <input type="text" wire:model="phone" class="form-control form-control-sm">
                         </div>
 
                         <div class="col-md-4">
@@ -94,34 +99,18 @@
                             <select wire:model="facility_id" class="form-select form-select-sm">
                                 <option value="">-- اختر جهة العمل --</option>
                                 @foreach($facilities as $fac)
-                                    <option value="{{ $fac->id }}">{{ $fac->name }}</>
+                                    <option value="{{ $fac->id }}">{{ $fac->name }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small mb-1 text-secondary">جهة الانتداب / النيابة / الإعارة</label>
-                            <input type="text" wire:model="secondment_facility" class="form-control form-control-sm" placeholder="اسم الجهة (أو اتركه فارغاً)">
+                            <label class="form-label fw-bold small mb-1
+                            text-secondary">جهة الانتداب / النيابة / الإعارة</label>
+                            <input type="text" wire:model="secondment_facility"
+                            class="form-control form-control-sm" placeholder="اسم الجهة  الممنتدب البها ">
                         </div>
                     </div>
-
-                    @if($activeRegistration)
-                        @if(!$canRegisterNew)
-                            <div class="alert alert-danger d-flex align-items-center p-2 mt-3 mb-0 rounded-3 small">
-                                <i class="bi bi-x-circle-fill fs-6 me-2"></i>
-                                <div>
-                                    <strong>تنبيه محظور: لا يمكن التسجيل!</strong> المرشح مقيد حالياً بـ ({{ $activeRegistration->required_degree }} - {{ $activeRegistration->required_specialty }}) بجامعة {{ $activeRegistration->required_university }} وموقفه الحالي <strong>{{ $activeRegistration->study_status }}</strong>.
-                                </div>
-                            </div>
-                        @else
-                            <div class="alert alert-info d-flex align-items-center p-2 mt-3 mb-0 rounded-3 small">
-                                <i class="bi bi-info-circle-fill fs-6 me-2"></i>
-                                <div>
-                                    <strong>تنبيه الموقف السابق:</strong> سبق له القيد وموقفه الحالي مغلق كـ <strong>{{ $activeRegistration->study_status }}</strong>. يمكنك التسجيل له.
-                                </div>
-                            </div>
-                        @endif
-                    @endif
                 </div>
             </div>
 
@@ -184,11 +173,11 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold small mb-1">التخصص المطلوب <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="required_specialty" class="form-control form-control-sm" placeholder="مثال: الباطنة العامة">
+                            <input type="text" wire:model="required_specialty" class="form-control form-control-sm">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold small mb-1">الجامعة المطلوبة <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="required_university" class="form-control form-control-sm" placeholder="مثال: جامعة سوهاج">
+                            <input type="text" wire:model="required_university" class="form-control form-control-sm">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold small mb-1 text-primary">نوع الترشيح <span class="text-danger">*</span></label>
@@ -203,25 +192,13 @@
                             <input type="date" wire:model="application_date" class="form-control form-control-sm bg-light" readonly>
                         </div>
 
-                        @if($doctorateEligibilityError)
-                            <div class="col-12">
-                                <div class="alert alert-warning p-2 mb-0 rounded-3 border-warning small">
-                                    <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
-                                    <strong>تنبيه شرط الدكتوراه:</strong> {{ $doctorateEligibilityError }}
-                                </div>
-                            </div>
-                        @endif
-
                         <div class="col-12">
                             <hr class="my-2">
-                            @if($isPriorAutoFilled)
-                                <span class="badge bg-info text-dark mb-1"><i class="bi bi-magic me-1"></i>تم جلب بيانات القيد السابق تلقائياً</span>
-                            @endif
                         </div>
 
                         <div class="col-md-3">
                             <label class="form-label small fw-bold mb-1">هل سبق القيد بالدراسات؟</label>
-                            <select wire:model.live="prior_registration_status" class="form-select form-select-sm" {{ $isPriorAutoFilled ? 'disabled' : '' }}>
+                            <select wire:model.live="prior_registration_status" class="form-select form-select-sm">
                                 <option value="لا">لا</option>
                                 <option value="نعم">نعم</option>
                             </select>
@@ -229,32 +206,17 @@
 
                         @if($prior_registration_status === 'نعم')
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold mb-1">حالة الموقف السابق</label>
-                                <select wire:model.live="prior_study_outcome" class="form-select form-select-sm" {{ $isPriorAutoFilled ? 'disabled' : '' }}>
-                                    <option value="تم الحصول عليها">تم الحصول على الدرجة</option>
-                                    <option value="اعتذر أو تم الإلغاء">اعتذر / تم إلغاء القيد</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
                                 <label class="form-label small mb-1">الدرجة العلمية السابقة</label>
-                                <input type="text" wire:model="prior_registration_study" class="form-control form-control-sm" placeholder="مثال: دبلوم باطنة" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
+                                <input type="text" wire:model="prior_registration_study" class="form-control form-control-sm">
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small mb-1">سنة القيد السابقة</label>
-                                <input type="text" wire:model="prior_registration_year" class="form-control form-control-sm" placeholder="YYYY" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
+                                <input type="text" wire:model="prior_registration_year" class="form-control form-control-sm" placeholder="YYYY">
                             </div>
-
-                            @if($prior_study_outcome === 'تم الحصول عليها')
-                                <div class="col-md-4">
-                                    <label class="form-label small text-success fw-bold mb-1">تاريخ الحصول على الدرجة</label>
-                                    <input type="date" wire:model="prior_degree_date" class="form-control form-control-sm" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
-                                </div>
-                            @else
-                                <div class="col-md-6">
-                                    <label class="form-label small text-danger fw-bold mb-1">سبب إلغاء الدراسة السابقة</label>
-                                    <input type="text" wire:model="cancellation_reason" class="form-control form-control-sm" placeholder="اذكر السبب..." {{ $isPriorAutoFilled ? 'readonly' : '' }}>
-                                </div>
-                            @endif
+                            <div class="col-md-3">
+                                <label class="form-label small text-danger fw-bold mb-1">سبب إلغاء الدراسة السابقة إن وجد</label>
+                                <input type="text" wire:model="cancellation_reason" class="form-control form-control-sm">
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -264,8 +226,8 @@
                 <button type="button" wire:click="setTab(2)" class="btn btn-outline-secondary btn-sm px-4 rounded-3">
                     <i class="bi bi-arrow-right me-1"></i> السابق
                 </button>
-                <button type="submit" class="btn btn-success btn-sm px-4 rounded-3 fw-bold" {{ (!$canRegisterNew || $doctorateEligibilityError) ? 'disabled' : '' }}>
-                    <i class="bi bi-check-circle me-1"></i>حفظ القيد والترشيح
+                <button type="submit" class="btn btn-primary btn-sm px-4 rounded-3 fw-bold">
+                    <i class="bi bi-check-circle me-1"></i>حفظ التعديلات
                 </button>
             </div>
         </div>

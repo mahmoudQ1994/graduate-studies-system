@@ -4,6 +4,7 @@ namespace App\Livewire\Postgraduate;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
 use App\Models\PostgraduateRegistration;
 use App\Models\StudyLeave;
 use Carbon\Carbon;
@@ -152,13 +153,20 @@ class ManageStudyLeaves extends Component
             'end_date'   => 'nullable|date|after_or_equal:start_date',
         ]);
 
+        $durationText = null;
+        if ($this->start_date && $this->end_date) {
+            $durationText = $this->calculated_duration_text !== '-' ? $this->calculated_duration_text : static::getFormattedDuration($this->start_date, $this->end_date);
+        }
+
         if ($this->editing_leave_id) {
             $leave = StudyLeave::findOrFail($this->editing_leave_id);
             $leave->update([
-                'leave_type' => $this->leave_type,
-                'start_date' => $this->start_date,
-                'end_date'   => $this->end_date,
-                'notes'      => $this->notes,
+                'leave_type'     => $this->leave_type,
+                'start_date'     => $this->start_date,
+                'end_date'       => $this->end_date,
+                'duration_years' => $durationText,
+                'notes'          => $this->notes,
+                'user_id'        => auth()->id(), // تسجيل المسؤول عن آخر تعديل
             ]);
         } else {
             StudyLeave::create([
@@ -166,13 +174,16 @@ class ManageStudyLeaves extends Component
                 'leave_type'                   => $this->leave_type,
                 'start_date'                   => $this->start_date,
                 'end_date'                     => $this->end_date,
+                'duration_years'               => $durationText,
                 'notes'                        => $this->notes,
+                'user_id'                      => auth()->id(), // تسجيل المستخدم الفعلي عند الإنشاء
             ]);
         }
 
         // تحديث نوع التفرغ في السجل الرئيسي
         $this->selectedReg->update([
             'study_leave_type' => $this->leave_type,
+            'user_id'          => auth()->id(), // اختياري لتحديث السجل الرئيسي أيضاً
         ]);
 
         $this->selectedReg->refresh();
@@ -189,31 +200,28 @@ class ManageStudyLeaves extends Component
         ]);
 
         $leave = StudyLeave::findOrFail($leaveId);
+        $actualReturn = $this->return_dates[$leaveId];
 
-        // 1. تسجيل تاريخ العودة الفعلي للإجازة في العمود الصحيح
+        // إعادة حساب المدة الفعلية بناءً على تاريخ العودة المبكر (القطع)
+        $actualDurationText = static::getFormattedDuration($leave->start_date, $actualReturn);
+
+        // 1. تحديث تاريخ العودة الفعلي، وتاريخ النهاية، والمدة المحسوبة بدقة مع تسجيل المستخدم
         $leave->update([
-            'actual_return_date' => $this->return_dates[$leaveId],
+            'actual_return_date' => $actualReturn,
+            'end_date'           => $actualReturn,
+            'duration_years'     => $actualDurationText,
+            'user_id'            => auth()->id(), // تسجيل من قام بعملية القطع واستلام العمل
         ]);
 
-        //تحديث تاريخ نهاية التفرغ بناءا على تاريخ استلام العمل إذا كان موجود
-        if ($this->return_dates[$leaveId]) {
-            $leave->update([
-                'end_date' => $this->return_dates[$leaveId],
-            ]);
-        }
-
-        // 2. تحديث موقف المرشح الرئيسي إلى "بدون تفرغ" نظراً لإنهاء التفرغ واستلام العمل
+        // 2. تحديث موقف المرشح الرئيسي إلى "بدون تفرغ"
         $this->selectedReg->update([
             'study_leave_type' => 'بدون تفرغ',
         ]);
 
-        // تحديث البيانات المرتبطة في المكون
         $this->selectedReg->refresh();
-
-        // مسح الحقل الخاص بهذه الإجازة
         unset($this->return_dates[$leaveId]);
 
-        session()->flash('modal_success', 'تم تسجيل استلام العمل وإنهاء التفرغ بنجاح، وتحويل الموقف إلى بدون تفرغ.');
+        session()->flash('modal_success', 'تم تسجيل قطع التفرغ وعودة المرشح بنجاح، وتحديث المدة الفعلية للإجازة.');
     }
 
     public function deleteLeave($leaveId)

@@ -22,7 +22,11 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $superAdminUser->assignRole($superAdminRole);
-        
+
+        $this->call([
+            RoleAndPermissionSeeder::class,
+        ]);
+
 
     }
 }

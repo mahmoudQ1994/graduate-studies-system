@@ -65,12 +65,19 @@
                         </a>
                     </li>
 
-                    <!-- 3. تسجيل موقف المرشح -->
+                    <!-- 3.  جلب بيانات  المرشحين بالدراسات العليا  -->
                     <li class="nav-item">
                         <a class="nav-link py-1 text-secondary"
-                         href="" wire:navigate>
-                            <i class="bi bi-pencil-square me-2"></i>متابعة وتحديث موقف مرشح
+                         href="{{ route('postgraduate.candidates-list') }}" wire:navigate>
+                            <i class="bi bi-pencil-square me-2"></i>   قائمة المرشحين بالدراسات العليا
                         </a>
+                    </li>
+
+                    <!-- 3.  تنفيذ او تعديل موقف مرشح      -->
+                    <li class="nav-item">
+                        <a class="nav-link py-1 text-secondary"
+                         href="{{ route('postgraduate.study-status') }}" wire:navigate>
+                            <i class="bi bi-pencil-square me-2"></i> موقف المرشح </a>
                     </li>
 
                     <!-- 4. إدارة أجازات التفرغ الدراسي -->
@@ -78,6 +85,14 @@
                         <a class="nav-link py-1 text-secondary"
                         href="{{ route('postgraduate.leaves') }}" wire:navigate>
                             <i class="bi bi-calendar2-week me-2"></i>إدارة أجازات التفرغ الدراسي
+                        </a>
+                    </li>
+
+                    <!-- إدارة إيقاف القيد -->
+                    <li class="nav-item">
+                        <a class="nav-link py-1 text-secondary"
+                        href="{{ route('postgraduate.study-pauses') }}" wire:navigate>
+                            <i class="bi bi-pause-circle-fill me-2"></i>إدارة إيقاف القيد
                         </a>
                     </li>
                     <!-- 4. التقارير -->

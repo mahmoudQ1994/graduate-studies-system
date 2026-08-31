@@ -11,8 +11,11 @@ use App\Livewire\Structure\HospitalManager;
 use App\Livewire\UserManagement\UserManager;
 use App\Livewire\Postgraduate\CandidateSearch;
 use App\Livewire\Postgraduate\CandidateRegister;
-
+use App\Livewire\Postgraduate\PostgraduateCandidatesList;
+use App\Livewire\Postgraduate\PostgraduateEdit; // تصحيح حرف L الكبير
 use App\Livewire\Postgraduate\ManageStudyLeaves;
+use App\Livewire\Postgraduate\ManageStudyStatus;
+use App\Livewire\Postgraduate\ManageStudyPauses;
 
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
@@ -36,7 +39,6 @@ Route::middleware(['auth'])->group(function () {
 
     // الإعدادات العامة للموقع
     Route::get('/settings/site', SiteSetting::class)->name('site-settings');
-
     Route::get('/settings/departments', DepartmentManager::class)->name('departments');
 
     // مسار إدارة المراكز والمدن
@@ -67,14 +69,34 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('postgraduate')->name('postgraduate.')->group(function () {
         // مسار البحث عن المرشحين
         Route::get('/candidate-search', CandidateSearch::class)->name('search');
-        // مسار تسجيل المرشح    
+
+        // مسار تسجيل المرشح
         Route::get('/candidate-register', CandidateRegister::class)->name('register');
 
-        // مسار متابعة وتحديث موقف المرشح
+        // مسار عرض قائمة المرشحين
+        Route::get('/candidates-list', PostgraduateCandidatesList::class)->name('candidates-list');
+
+        // مسار تعديل بيانات المرشح
+        Route::get('/candidate-edit/{id}', PostgraduateEdit::class)->name('edit');
+
+        // مسار حفظ تعديل بيانات المرشح (مصحح لتجنب التكرار)
+        Route::get('/candidates', PostgraduateCandidatesList::class)->name('candidates');
+
+        // مسار تعديل الدراسة للمرشح
+        Route::get('/manage-study-status', ManageStudyStatus::class)->name('study-status');
+
+        // مسار تعديل واضافة اجازة تفرغ دراسى
         Route::get('/manage-study-leaves', ManageStudyLeaves::class)->name('leaves');
+
+        // مسار إدارة إيقاف القيد
+        Route::get('/study-pauses', ManageStudyPauses::class)->name('study-pauses');
+
+
+
+        Route::view('profile', 'profile')->name('profile');
     });
 
-    Route::view('profile', 'profile')->name('profile');
+    
 });
 
 require __DIR__.'/auth.php';

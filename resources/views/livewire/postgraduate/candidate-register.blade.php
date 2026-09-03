@@ -11,6 +11,10 @@
         <div class="alert alert-danger py-2 px-3 rounded-3 shadow-sm mb-3 small">{{ session('error') }}</div>
     @endif
 
+    @if (session()->has('success'))
+        <div class="alert alert-success py-2 px-3 rounded-3 shadow-sm mb-3 small">{{ session('success') }}</div>
+    @endif
+
     <!-- Wizard Tabs (مصغرة ومتناسقة) -->
     <div class="row g-2 mb-3 text-center">
         <div class="col-md-4">
@@ -80,12 +84,12 @@
                             <select wire:model.live="profession" class="form-select form-select-sm">
                                 <option value="طبيب بشري">طبيب بشري</option>
                                 <option value="طبيب أسنان">طبيب أسنان</option>
-                                <option value="ممارس علاج طبيعى">ممارس علاج طبيبعى </option>
+                                <option value="ممارس علاج طبيعى">ممارس علاج طبيعى</option>
                                 <option value="صيدلي">صيدلي</option>
                                 <option value="تمريض">تمريض</option>
-                                <option value="اخصائى علوم صحية ">اخصائى علوم صحية </option>
-                                <option value="باحث شئون قانونية ">باحث شئون قانونية </option>
-                                <option value="اخصائى شئون مالية وادارية  ">اخصائى شئون ادارية </option>
+                                <option value="اخصائى علوم صحية">اخصائى علوم صحية</option>
+                                <option value="باحث شئون قانونية">باحث شئون قانونية</option>
+                                <option value="اخصائى شئون مالية وادارية">اخصائى شئون ادارية</option>
                             </select>
                         </div>
 
@@ -94,7 +98,7 @@
                             <select wire:model="facility_id" class="form-select form-select-sm">
                                 <option value="">-- اختر جهة العمل --</option>
                                 @foreach($facilities as $fac)
-                                    <option value="{{ $fac->id }}">{{ $fac->name }}</>
+                                    <option value="{{ $fac->id }}">{{ $fac->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -110,14 +114,19 @@
                             <div class="alert alert-danger d-flex align-items-center p-2 mt-3 mb-0 rounded-3 small">
                                 <i class="bi bi-x-circle-fill fs-6 me-2"></i>
                                 <div>
-                                    <strong>تنبيه محظور: لا يمكن التسجيل!</strong> المرشح مقيد حالياً بـ ({{ $activeRegistration->required_degree }} - {{ $activeRegistration->required_specialty }}) بجامعة {{ $activeRegistration->required_university }} وموقفه الحالي <strong>{{ $activeRegistration->study_status }}</strong>.
+                                    <strong>تنبيه محظور: لا يمكن التسجيل!</strong> المرشح مقيد حالياً بـ ({{ $activeRegistration->required_degree }} - {{ $activeRegistration->required_specialty }}) بجامعة {{ $activeRegistration->required_university }} وموقفه الحالي <strong>{{ $activeRegistration->study_status }}
+                                          -- وتاريخ  تسجيل الترشيح {{ $activeRegistration->application_date }}</strong>.
                                 </div>
                             </div>
                         @else
                             <div class="alert alert-info d-flex align-items-center p-2 mt-3 mb-0 rounded-3 small">
                                 <i class="bi bi-info-circle-fill fs-6 me-2"></i>
                                 <div>
-                                    <strong>تنبيه الموقف السابق:</strong> سبق له القيد وموقفه الحالي مغلق كـ <strong>{{ $activeRegistration->study_status }}</strong>. يمكنك التسجيل له.
+                                    <strong>تنبيه الموقف السابق:</strong>
+                                     سبق له القيد وموقفه الحالي مغلق كـ <strong>{{ $activeRegistration->study_status }}</strong>
+                                     <strong>{{ $activeRegistration->required_degree }}</strong>
+                                     بتاريخ {{ $activeRegistration->nominated_degree_date }}
+                                     بتقدير <strong>{{ $activeRegistration->degree_grade }}</strong>. يمكنك التسجيل له.
                                 </div>
                             </div>
                         @endif
@@ -140,16 +149,40 @@
                 </div>
                 <div class="card-body p-3">
                     <div class="row g-2">
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">جامعة التخرج</label><input type="text" wire:model="university" class="form-control form-control-sm"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">كلية التخرج</label><input type="text" wire:model="faculty" class="form-control form-control-sm"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">دفعة التخرج</label><input type="text" wire:model="graduation_batch" class="form-control form-control-sm"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">التقدير العام</label><input type="text" wire:model="general_grade" class="form-control form-control-sm"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">المجموع التراكمي</label><input type="text" wire:model="total_marks" class="form-control form-control-sm"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">جامعة التخرج</label>
+                            <input type="text" wire:model="university" class="form-control form-control-sm"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">كلية التخرج</label>
+                            <input type="text" wire:model="faculty" class="form-control form-control-sm"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">دفعة التخرج</label>
+                            <input type="text" wire:model="graduation_batch" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold mb-1">التقدير العام</label>
+                            <select wire:model="general_grade" class="form-select form-select-sm">
+                                <option value="">-- اختر التقدير العام --</option>
+                                <option value="مقبول">مقبول</option>
+                                <option value="جيد">جيد</option>
+                                <option value="جيد جداً">جيد جداً</option>
+                                <option value="امتياز">امتياز</option>
+                                <option value="امتياز مع مرتبة الشرف">امتياز مع مرتبة الشرف</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">المجموع التراكمي</label>
+                            <input type="text" wire:model="total_marks" class="form-control form-control-sm">
+                        </div>
 
                         @if(in_array($profession, ['طبيب بشري', 'طبيب أسنان']))
-                            <div class="col-md-4"><label class="form-label small text-primary fw-bold mb-1">تقدير المادة (للأطباء)</label><input type="text" wire:model="subject_grade" class="form-control form-control-sm"></div>
-                            <div class="col-md-6"><label class="form-label small text-primary fw-bold mb-1">تخصص حركة النيابة/الإعارة</label><input type="text" wire:model="movement_specialty" class="form-control form-control-sm"></div>
-                            <div class="col-md-6"><label class="form-label small text-primary fw-bold mb-1">تاريخ حركة النيابة</label><input type="text" wire:model="movement_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD"></div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-primary fw-bold mb-1">تقدير المادة (للأطباء)</label>
+                            <select wire:model="subject_grade" class="form-select form-select-sm border-primary">
+                                <option value="">-- اختر تقدير المادة --</option>
+                                <option value="مقبول">مقبول</option>
+                                <option value="جيد">جيد</option>
+                                <option value="جيد جداً">جيد جداً</option>
+                                <option value="امتياز">امتياز</option>
+                                <option value="امتياز مع مرتبة الشرف">امتياز مع مرتبة الشرف</option>
+                            </select>
+                        </div>
                         @endif
                     </div>
                 </div>
@@ -203,11 +236,37 @@
                             <input type="date" wire:model="application_date" class="form-control form-control-sm bg-light" readonly>
                         </div>
 
+                        <!-- تنبيه شرط الدكتوراه -->
                         @if($doctorateEligibilityError)
                             <div class="col-12">
                                 <div class="alert alert-warning p-2 mb-0 rounded-3 border-warning small">
                                     <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>
                                     <strong>تنبيه شرط الدكتوراه:</strong> {{ $doctorateEligibilityError }}
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- قسم إدخال بيانات الماجستير في حال كانت الدراسة المطلوبة دكتوراه ولم يتم جلبها تلقائياً -->
+                        @if($required_degree === 'دكتوراة')
+                            <div class="col-12 mt-3">
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <h6 class="text-primary fw-bold small mb-2"><i class="bi bi-award me-1"></i>بيانات درجة الماجستير السابقة (مطلوبة للتقدم للدكتوراه)</h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-1">تاريخ الحصول على الماجستير</label>
+                                            <input type="date" wire:model.live="master_degree_date" class="form-control form-control-sm {{ $isMasterAutoFilled ? 'bg-light' : '' }}" {{ $isMasterAutoFilled ? 'readonly' : '' }}>
+                                            @if($isMasterAutoFilled)
+                                                <span class="text-info extra-small"><i class="bi bi-magic"></i> تم جلب التاريخ تلقائياً من السجل السابق</span>
+                                            @endif
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-1">تقدير الماجستير</label>
+                                            <input type="text" wire:model.live="degree_grade" class="form-control form-control-sm {{ $isMasterAutoFilled ? 'bg-light' : '' }}" placeholder="مثال: جيد جداً، امتياز" {{ $isMasterAutoFilled ? 'readonly' : '' }}>
+                                            @if($isMasterAutoFilled)
+                                                <span class="text-info extra-small"><i class="bi bi-magic"></i> تم جلب التقدير تلقائياً من السجل السابق</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         @endif
@@ -221,38 +280,44 @@
 
                         <div class="col-md-3">
                             <label class="form-label small fw-bold mb-1">هل سبق القيد بالدراسات؟</label>
-                            <select wire:model.live="prior_registration_status" class="form-select form-select-sm" {{ $isPriorAutoFilled ? 'disabled' : '' }}>
+                            <select wire:model.live="prior_registration_status" class="form-select form-select-sm {{ $isPriorAutoFilled ? 'bg-light text-muted' : '' }}" {{ $isPriorAutoFilled ? 'disabled' : '' }}>
                                 <option value="لا">لا</option>
                                 <option value="نعم">نعم</option>
                             </select>
+                            @if($isPriorAutoFilled)
+                                <input type="hidden" wire:model="prior_registration_status">
+                            @endif
                         </div>
 
                         @if($prior_registration_status === 'نعم')
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold mb-1">حالة الموقف السابق</label>
-                                <select wire:model.live="prior_study_outcome" class="form-select form-select-sm" {{ $isPriorAutoFilled ? 'disabled' : '' }}>
+                                <select wire:model.live="prior_study_outcome" class="form-select form-select-sm {{ $isPriorAutoFilled ? 'bg-light text-muted' : '' }}" {{ $isPriorAutoFilled ? 'disabled' : '' }}>
                                     <option value="تم الحصول عليها">تم الحصول على الدرجة</option>
                                     <option value="اعتذر أو تم الإلغاء">اعتذر / تم إلغاء القيد</option>
                                 </select>
+                                @if($isPriorAutoFilled)
+                                    <input type="hidden" wire:model="prior_study_outcome">
+                                @endif
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small mb-1">الدرجة العلمية السابقة</label>
-                                <input type="text" wire:model="prior_registration_study" class="form-control form-control-sm" placeholder="مثال: دبلوم باطنة" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
+                                <input type="text" wire:model="prior_registration_study" class="form-control form-control-sm {{ $isPriorAutoFilled ? 'bg-light' : '' }}" placeholder="مثال: دبلوم باطنة" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small mb-1">سنة القيد السابقة</label>
-                                <input type="text" wire:model="prior_registration_year" class="form-control form-control-sm" placeholder="YYYY" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
+                                <input type="text" wire:model="prior_registration_year" class="form-control form-control-sm {{ $isPriorAutoFilled ? 'bg-light' : '' }}" placeholder="YYYY" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
                             </div>
 
                             @if($prior_study_outcome === 'تم الحصول عليها')
                                 <div class="col-md-4">
                                     <label class="form-label small text-success fw-bold mb-1">تاريخ الحصول على الدرجة</label>
-                                    <input type="date" wire:model="prior_degree_date" class="form-control form-control-sm" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
+                                    <input type="date" wire:model="prior_degree_date" class="form-control form-control-sm {{ $isPriorAutoFilled ? 'bg-light' : '' }}" {{ $isPriorAutoFilled ? 'readonly' : '' }}>
                                 </div>
                             @else
                                 <div class="col-md-6">
                                     <label class="form-label small text-danger fw-bold mb-1">سبب إلغاء الدراسة السابقة</label>
-                                    <input type="text" wire:model="cancellation_reason" class="form-control form-control-sm" placeholder="اذكر السبب..." {{ $isPriorAutoFilled ? 'readonly' : '' }}>
+                                    <input type="text" wire:model="cancellation_reason" class="form-control form-control-sm {{ $isPriorAutoFilled ? 'bg-light' : '' }}" placeholder="اذكر السبب..." {{ $isPriorAutoFilled ? 'readonly' : '' }}>
                                 </div>
                             @endif
                         @endif

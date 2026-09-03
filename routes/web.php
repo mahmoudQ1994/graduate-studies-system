@@ -16,6 +16,7 @@ use App\Livewire\Postgraduate\PostgraduateEdit; // تصحيح حرف L الكب�
 use App\Livewire\Postgraduate\ManageStudyLeaves;
 use App\Livewire\Postgraduate\ManageStudyStatus;
 use App\Livewire\Postgraduate\ManageStudyPauses;
+use App\livewire\Reports\GeneralDashboard;
 
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
@@ -91,12 +92,14 @@ Route::middleware(['auth'])->group(function () {
         // مسار إدارة إيقاف القيد
         Route::get('/study-pauses', ManageStudyPauses::class)->name('study-pauses');
 
+        // مسار لوحة التحكم العامة
+        Route::get('/general-dashboard', GeneralDashboard::class)->name('general-dashboard');
 
 
         Route::view('profile', 'profile')->name('profile');
     });
 
-    
+
 });
 
 require __DIR__.'/auth.php';

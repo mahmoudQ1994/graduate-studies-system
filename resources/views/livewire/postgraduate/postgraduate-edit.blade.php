@@ -121,6 +121,7 @@
             </div>
         </div>
 
+
         <!-- 2. بيانات المؤهل وحركة النيابة -->
         <div class="{{ $activeTab === 2 ? '' : 'd-none' }}">
             <div class="card border-0 shadow-sm rounded-3 mb-3">
@@ -132,11 +133,35 @@
                         <div class="col-md-4"><label class="form-label small fw-bold mb-1">جامعة التخرج</label><input type="text" wire:model="university" class="form-control form-control-sm"></div>
                         <div class="col-md-4"><label class="form-label small fw-bold mb-1">كلية التخرج</label><input type="text" wire:model="faculty" class="form-control form-control-sm"></div>
                         <div class="col-md-4"><label class="form-label small fw-bold mb-1">دفعة التخرج</label><input type="text" wire:model="graduation_batch" class="form-control form-control-sm"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">التقدير العام</label><input type="text" wire:model="general_grade" class="form-control form-control-sm"></div>
+
+                        <!-- التقدير العام (قائمة منسدلة) -->
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold mb-1">التقدير العام</label>
+                            <select wire:model="general_grade" class="form-select form-select-sm">
+                                <option value="">-- اختر التقدير العام --</option>
+                                <option value="مقبول">مقبول</option>
+                                <option value="جيد">جيد</option>
+                                <option value="جيد جداً">جيد جداً</option>
+                                <option value="امتياز">امتياز</option>
+                                <option value="امتياز مع مرتبة الشرف">امتياز مع مرتبة الشرف</option>
+                            </select>
+                        </div>
+
                         <div class="col-md-4"><label class="form-label small fw-bold mb-1">المجموع التراكمي</label><input type="text" wire:model="total_marks" class="form-control form-control-sm"></div>
 
                         @if(in_array($profession, ['طبيب بشري', 'طبيب أسنان']))
-                            <div class="col-md-4"><label class="form-label small text-primary fw-bold mb-1">تقدير المادة (للأطباء)</label><input type="text" wire:model="subject_grade" class="form-control form-control-sm"></div>
+                            <!-- تقدير المادة للأطباء (قائمة منسدلة) -->
+                            <div class="col-md-4">
+                                <label class="form-label small text-primary fw-bold mb-1">تقدير المادة (للأطباء)</label>
+                                <select wire:model="subject_grade" class="form-select form-select-sm border-primary">
+                                    <option value="">-- اختر تقدير المادة --</option>
+                                    <option value="مقبول">مقبول</option>
+                                    <option value="جيد">جيد</option>
+                                    <option value="جيد جداً">جيد جداً</option>
+                                    <option value="امتياز">امتياز</option>
+                                    <option value="امتياز مع مرتبة الشرف">امتياز مع مرتبة الشرف</option>
+                                </select>
+                            </div>
                             <div class="col-md-6"><label class="form-label small text-primary fw-bold mb-1">تخصص حركة النيابة/الإعارة</label><input type="text" wire:model="movement_specialty" class="form-control form-control-sm"></div>
                             <div class="col-md-6"><label class="form-label small text-primary fw-bold mb-1">تاريخ حركة النيابة</label><input type="text" wire:model="movement_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD"></div>
                         @endif
@@ -154,7 +179,7 @@
             </div>
         </div>
 
-        <!-- 3. الدراسة المطلوبة والقيد السابق -->
+    <!-- 3. الدراسة المطلوبة والقيد السابق -->
         <div class="{{ $activeTab === 3 ? '' : 'd-none' }}">
             <div class="card border-0 shadow-sm rounded-3 mb-3">
                 <div class="card-header bg-white py-2 px-3 fw-bold text-success small">
@@ -191,6 +216,30 @@
                             <label class="form-label fw-bold small mb-1 text-muted">تاريخ تسجيل الطلب</label>
                             <input type="date" wire:model="application_date" class="form-control form-control-sm bg-light" readonly>
                         </div>
+
+                        <!-- يظهر هذا القسم فقط إذا كان نوع الدراسة المطلوبة هو "دكتوراة" -->
+                        @if($required_degree === 'دكتوراة')
+                            <div class="col-12">
+                                <hr class="my-2">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold mb-1 text-success">تاريخ الحصول على الماجستير <span class="text-danger">*</span></label>
+                                <input type="date" wire:model="master_degree_date" class="form-control form-control-sm">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold mb-1 text-success">تقدير الماجستير <span class="text-danger">*</span></label>
+                                <select wire:model="degree_grade" class="form-select form-select-sm border-success">
+                                    <option value="">-- اختر تقدير الماجستير --</option>
+                                    <option value="مقبول">مقبول</option>
+                                    <option value="جيد">جيد</option>
+                                    <option value="جيد جداً">جيد جداً</option>
+                                    <option value="امتياز">امتياز</option>
+                                    <option value="امتياز مع مرتبة الشرف">امتياز مع مرتبة الشرف</option>
+                                </select>
+                            </div>
+                        @endif
 
                         <div class="col-12">
                             <hr class="my-2">

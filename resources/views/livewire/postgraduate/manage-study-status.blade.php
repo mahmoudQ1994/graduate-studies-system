@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <!-- منطقة البحث والتصفية بالترتيب المطلوب: الاسم - الرقم القومي - نوع الدراسة - موقف الدراسة - تاريخ تسجيل الطلب -->
+    <!-- منطقة البحث والتصفية -->
     <div class="card shadow-sm border-0 rounded-4 mb-4">
         <div class="card-body p-3 bg-light rounded-4">
             <div class="row g-2">
@@ -57,6 +57,7 @@
                         <option value="مستمر">مستمر بالدراسة</option>
                         <option value="حصل على الدرجة">حصل على الدرجة</option>
                         <option value="اعتذار">اعتذار عن الدراسة</option>
+                        <option value="عدم القبول بالدراسة">عدم القبول بالدراسة</option>
                     </select>
                 </div>
 
@@ -66,7 +67,7 @@
                     <input type="date" wire:model.live="filter_application_date" class="form-control form-control-sm">
                 </div>
             </div>
-
+        </div>
     </div>
 
     <!-- جدول عرض البيانات -->
@@ -135,18 +136,22 @@
                                     @php
                                         $badgeColor = match($reg->study_status) {
                                             'مستمر' => 'bg-info-subtle text-info-emphasis',
-                                            'نفذ' => 'bg-primary-subtle text-primary-emphasis',
                                             'حصل على الدرجة' => 'bg-success-subtle text-success-emphasis',
                                             'اعتذار' => 'bg-danger-subtle text-danger-emphasis',
+                                            'عدم القبول بالدراسة' => 'bg-warning-subtle text-warning-emphasis',
                                             default => 'bg-secondary-subtle text-secondary-emphasis'
                                         };
                                     @endphp
                                     <span class="badge {{ $badgeColor }} px-2 py-1 fw-semibold">
-                                        {{ $reg->study_status ?? 'مستمر' }}
+                                        {{ $reg->study_status ?? 'جاري فحص الطلب' }}
                                     </span>
                                     @if($reg->study_status == 'اعتذار' && $reg->apology_reason)
                                         <div class="text-danger small mt-1" title="{{ $reg->apology_reason }}">
                                             {{ Str::limit($reg->apology_reason, 20) }}
+                                        </div>
+                                    @elseif($reg->study_status == 'عدم القبول بالدراسة' && $reg->rejection_reason)
+                                        <div class="text-warning small mt-1" title="{{ $reg->rejection_reason }}">
+                                            {{ Str::limit($reg->rejection_reason, 20) }}
                                         </div>
                                     @endif
                                 </td>
@@ -160,10 +165,18 @@
                                 <td class="small text-muted">
                                     @if($reg->nominated_degree_status)
                                         <span class="fw-bold text-dark">{{ $reg->nominated_degree_status }}</span>
+                                        @if($reg->degree_grade)
+                                            <div class="text-primary small">التقدير: {{ $reg->degree_grade }}</div>
+                                        @endif
                                     @elseif($reg->study_status == 'حصل على الدرجة')
                                         <span class="text-success fw-bold">حصل عليها</span>
+                                        @if($reg->degree_grade)
+                                            <div class="text-primary small">التقدير: {{ $reg->degree_grade }}</div>
+                                        @endif
                                     @elseif($reg->study_status == 'اعتذار')
                                         <span class="text-danger fw-bold">اعتذر ولم يحصل على الدرجة</span>
+                                    @elseif($reg->study_status == 'عدم القبول بالدراسة')
+                                        <span class="text-warning fw-bold">مرفوض (في: {{ $reg->rejection_date }})</span>
                                     @else
                                         -
                                     @endif
@@ -226,38 +239,45 @@
                                 <label class="form-label fw-bold text-secondary mb-1">موقف الدراسة <span class="text-danger">*</span></label>
                                 <select wire:model.live="study_status" class="form-select shadow-none">
                                     <option value="جاري فحص الطلب">جاري فحص الطلب</option>
-                                    <option value="تنفيذ دراسة">تنفيذ دراسة (سيتحول إلى مستمر ويسجل تاريخ القيد والتنفيذ)</option>
+                                    <option value="تنفيذ دراسة">تنفيذ دراسة (سيتحول إلى مستمر)</option>
                                     <option value="مستمر">مستمر بالدراسة</option>
                                     <option value="حصل على الدرجة">حصل على الدرجة</option>
-                                    <option value="اعتذار">اعتذار</option>
+                                    <option value="اعتذار">اعتذار عن الدراسة</option>
+                                    <option value="عدم القبول بالدراسة">عدم القبول بالدراسة</option>
                                 </select>
                                 @error('study_status') <span class="text-danger text-sm">{{ $message }}</span> @enderror
                             </div>
 
-                            <!-- تاريخ القيد (يظهر عند اختيار تنفيذ دراسة أو مستمر) -->
+                            <!-- تاريخ القيد -->
                             @if($study_status == 'تنفيذ دراسة' || $study_status == 'مستمر' || $study_status == 'حصل على الدرجة')
                             <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تاريخ القيد <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold text-secondary mb-1">تاريخ القيد بالدراسة <span class="text-danger">*</span></label>
                                 <input type="date" wire:model.live="registration_date" class="form-control shadow-none">
                                 @error('registration_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
                             </div>
                             @endif
 
-                            <!-- تاريخ التنفيذ (يظهر عند اختيار تنفيذ دراسة) -->
+                            <!-- تاريخ التنفيذ -->
                             @if($study_status == 'تنفيذ دراسة')
                             <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تاريخ التنفيذ <span class="text-danger">*</span></label>
+                                <label class="form-label fw-bold text-secondary mb-1">تاريخ تنفيذ الدراسة <span class="text-danger">*</span></label>
                                 <input type="date" wire:model.live="execution_date" class="form-control shadow-none">
                                 @error('execution_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
                             </div>
                             @endif
 
-                            <!-- تاريخ الحصول على الدرجة -->
+                            <!-- تاريخ الحصول على الدرجة وتقدير الدرجة -->
                             @if($study_status == 'حصل على الدرجة')
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-secondary mb-1">تاريخ الحصول على الدرجة <span class="text-danger">*</span></label>
                                 <input type="date" wire:model.live="nominated_degree_date" class="form-control shadow-none">
                                 @error('nominated_degree_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary mb-1">تقدير الدرجة <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="degree_grade" class="form-control shadow-none" placeholder="اكتب تقدير الدرجة (مثال: ممتاز)...">
+                                @error('degree_grade') <span class="text-danger text-sm">{{ $message }}</span> @enderror
                             </div>
                             @endif
 
@@ -271,12 +291,28 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold text-secondary mb-1">سبب الاعتذار <span class="text-danger">*</span></label>
-                                <input type="text" wire:model.live="apology_reason" class="form-control shadow-none" placeholder="اكتب سبب الاعتذار...">
+                                <input type="text" wire:model="apology_reason" class="form-control shadow-none" placeholder="اكتب سبب الاعتذار...">
                                 @error('apology_reason') <span class="text-danger text-sm">{{ $message }}</span> @enderror
                             </div>
                             @endif
 
+                            <!-- حقول عدم القبول بالدراسة -->
+                            @if($study_status == 'عدم القبول بالدراسة')
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary mb-1">تاريخ الرفض <span class="text-danger">*</span></label>
+                                <input type="date" wire:model="rejection_date" class="form-control shadow-none">
+                                @error('rejection_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-secondary mb-1">سبب الرفض <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="rejection_reason" class="form-control shadow-none" placeholder="اكتب سبب عدم القبول...">
+                                @error('rejection_reason') <span class="text-danger text-sm">{{ $message }}</span> @enderror
+                            </div>
+                            @endif
+
                             <!-- عرض مدة الدراسة المحسوبة فوراً -->
+                            @if($study_status != 'عدم القبول بالدراسة')
                             <div class="col-12 mt-2">
                                 <div class="p-3 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
                                     <span class="text-dark fw-bold">
@@ -287,6 +323,7 @@
                                     </span>
                                 </div>
                             </div>
+                            @endif
 
                         </div>
                     </div>

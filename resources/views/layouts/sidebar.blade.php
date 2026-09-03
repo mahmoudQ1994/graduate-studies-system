@@ -98,7 +98,7 @@
                     <!-- 4. التقارير -->
                     <li class="nav-item">
                         <a class="nav-link py-1 text-secondary"
-                        href="" wire:navigate>
+                        href="{{ route('postgraduate.general-dashboard') }}" wire:navigate>
                             <i class="bi bi-file-earmark-bar-graph-fill me-2">
                                 </i>التقارير والإحصائيات
                         </a>

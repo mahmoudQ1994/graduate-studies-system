@@ -33,9 +33,14 @@ class PostgraduateRegistration extends Model
         'study_status',                 // موقف تنفيذ الدراسة (مستمر / اعتذر...)
         'apology_date',     // تاريخ الاعتذار عن الدراسة ان وجد
         'apology_reason',   // سبب الاعتذار عن الدراسة ان وجد
-        'execution_date',
-        'nominated_registration_date',
-        'user_id'
+        'execution_date',   // تاريخ تنفيذ الدراسة ان وجد
+        'nominated_registration_date',  // تاريخ الترشيح للقيد بالدراسة
+        'user_id',    //
+        'degree_grade',  // التقدير العام عند إنهاء الدراسة
+        'master_degree_date',  // تاريخ الحصول على الماجستير (خاص بالتسجيل للدكتوراة)
+        'rejection_date',  // تاريخ الرفض
+        'rejection_reason',  // سبب الرفض
+        
     ];
 
     /**

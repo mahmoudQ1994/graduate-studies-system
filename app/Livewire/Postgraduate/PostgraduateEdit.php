@@ -100,6 +100,9 @@ class PostgraduateEdit extends Component
 
     public $cancellation_reason;
 
+    public $master_degree_date;
+    public $degree_grade; // بدلاً من master_degree_grade ليتطابق مع قاعدة البيانات
+
 
 
     /**
@@ -216,6 +219,10 @@ class PostgraduateEdit extends Component
         $this->prior_registration_year = $this->registration->prior_registration_year;
 
         $this->cancellation_reason = $this->registration->cancellation_reason;
+
+        // تعبئة بيانات الماجستير إذا كانت موجودة
+        $this->master_degree_date = $this->registration->master_degree_date;
+        $this->degree_grade = $this->registration->degree_grade;
 
     }
 
@@ -362,6 +369,9 @@ class PostgraduateEdit extends Component
             'prior_registration_year' => $this->prior_registration_year,
 
             'cancellation_reason' => $this->cancellation_reason,
+
+            'master_degree_date' => $this->master_degree_date,
+            'degree_grade' => $this->degree_grade,
 
         ]);
 

@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Carbon;
 
 class PostgraduateRegistration extends Model
 {
@@ -40,7 +42,21 @@ class PostgraduateRegistration extends Model
         'master_degree_date',  // تاريخ الحصول على الماجستير (خاص بالتسجيل للدكتوراة)
         'rejection_date',  // تاريخ الرفض
         'rejection_reason',  // سبب الرفض
-        
+
+    ];
+
+    /**
+     * تحويل حقول التواريخ تلقائياً لتسهيل تنسيقها وعرضها
+     */
+    protected $casts = [
+        'application_date' => 'date:Y-m-d',
+        'registration_date' => 'date:Y-m-d',
+        'nominated_degree_date' => 'date:Y-m-d',
+        'apology_date' => 'date:Y-m-d',
+        'execution_date' => 'date:Y-m-d',
+        'nominated_registration_date' => 'date:Y-m-d',
+        'master_degree_date' => 'date:Y-m-d',
+        'rejection_date' => 'date:Y-m-d',
     ];
 
     /**
@@ -59,26 +75,35 @@ class PostgraduateRegistration extends Model
         return $this->belongsTo(HealthProfessional::class, 'health_professional_id');
     }
 
-    public function pauses()
-{
-    return $this->hasMany(RegistrationPause::class, 'postgraduate_registration_id');
-}
+        public function pauses()
+    {
+        return $this->hasMany(RegistrationPause::class, 'postgraduate_registration_id');
+    }
 
-public function getTotalPausedDaysAttribute()
-{
-    return $this->pauses->sum(function ($pause) {
-        if (!$pause->pause_start_date) return 0;
+    public function getTotalPausedDaysAttribute()
+    {
+        return $this->pauses->sum(function ($pause) {
+            if (!$pause->pause_start_date) return 0;
 
-        $start = \Carbon\Carbon::parse($pause->pause_start_date);
-        $end = $pause->resume_date ? \Carbon\Carbon::parse($pause->resume_date) :
-               ($pause->pause_end_date ? \Carbon\Carbon::parse($pause->pause_end_date) : now());
+            $start = \Carbon\Carbon::parse($pause->pause_start_date);
+            $end = $pause->resume_date ? \Carbon\Carbon::parse($pause->resume_date) :
+                ($pause->pause_end_date ? \Carbon\Carbon::parse($pause->pause_end_date) : now());
 
-        return max(0, $start->diffInDays($end));
-    });
-}
+            return max(0, $start->diffInDays($end));
+        });
+    }
 
-public function user()
-{
-    return $this->belongsTo(User::class); // أو User::class حسب اسم نموذج المستخدم لديك
-}
+    public function user()
+    {
+        return $this->belongsTo(User::class); // أو User::class حسب اسم نموذج المستخدم لديك
+    }
+
+    /**
+     * علاقة بديلة لإيقاف القيد لتتوافق مع التقارير
+     */
+    public function studyPauses()
+    {
+        return $this->hasMany(RegistrationPause::class, 'postgraduate_registration_id');
+    }
+
 }

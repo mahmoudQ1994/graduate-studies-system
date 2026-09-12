@@ -22,8 +22,5 @@ class MedicalMovement extends Model
     }
 
 
-    public function medicalMovement()
-    {
-        return $this->hasOne(MedicalMovement::class, 'health_professional_id');
-    }
+  
 }

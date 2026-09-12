@@ -128,7 +128,7 @@
 
                                 <!-- 7. تاريخ تسجيل الطلب -->
                                 <td class="small text-muted">
-                                    {{ $reg->application_date ?? '-' }}
+                                    {{ $reg->application_date ? \Carbon\Carbon::parse($reg->application_date)->format('Y-m-d') : '-' }}
                                 </td>
 
                                 <!-- 8. موقف تنفيذ الدراسة -->
@@ -158,7 +158,7 @@
 
                                 <!-- 9. تاريخ القيد بالدراسة -->
                                 <td class="small fw-semibold">
-                                    {{ $reg->registration_date ?? '-' }}
+                                    {{ $reg->registration_date ? \Carbon\Carbon::parse($reg->registration_date)->format('Y-m-d') : '-' }}
                                 </td>
 
                                 <!-- 10. موقف الحصول على الدرجة المرشح لها -->
@@ -176,13 +176,14 @@
                                     @elseif($reg->study_status == 'اعتذار')
                                         <span class="text-danger fw-bold">اعتذر ولم يحصل على الدرجة</span>
                                     @elseif($reg->study_status == 'عدم القبول بالدراسة')
-                                        <span class="text-warning fw-bold">مرفوض (في: {{ $reg->rejection_date }})</span>
+                                        <span class="text-warning fw-bold">مرفوض
+                                            (في: {{ $reg->rejection_date  ? \Carbon\Carbon::parse($reg->rejection_date)->format('Y-m-d') : '-' }})</span>
                                     @else
                                         -
                                     @endif
 
                                     @if($reg->nominated_degree_date)
-                                        <div class="text-success small">في: {{ $reg->nominated_degree_date }}</div>
+                                        <div class="text-success small">في: {{ $reg->nominated_degree_date  ? \Carbon\Carbon::parse($reg->nominated_degree_date)->format('Y-m-d') : '-' }}</div>
                                     @endif
                                 </td>
 
@@ -235,95 +236,90 @@
                         <div class="row g-3">
 
                             <!-- اختيار موقف الدراسة -->
+                            <!-- قائمة اختيار حالة الدراسة -->
                             <div class="mb-3">
-                                <label class="form-label fw-bold text-secondary mb-1">موقف الدراسة <span class="text-danger">*</span></label>
-                                <select wire:model.live="study_status" class="form-select shadow-none">
+                                <label class="form-label">حالة الدراسة</label>
+                                <select wire:model.live="study_status" class="form-control">
                                     <option value="جاري فحص الطلب">جاري فحص الطلب</option>
-                                    <option value="تنفيذ دراسة">تنفيذ دراسة (سيتحول إلى مستمر)</option>
-                                    <option value="مستمر">مستمر بالدراسة</option>
+                                    <option value="تنفيذ دراسة">تنفيذ دراسة</option>
                                     <option value="حصل على الدرجة">حصل على الدرجة</option>
-                                    <option value="اعتذار">اعتذار عن الدراسة</option>
+                                    <option value="اعتذار">اعتذار</option>
                                     <option value="عدم القبول بالدراسة">عدم القبول بالدراسة</option>
                                 </select>
-                                @error('study_status') <span class="text-danger text-sm">{{ $message }}</span> @enderror
                             </div>
 
-                            <!-- تاريخ القيد -->
-                            @if($study_status == 'تنفيذ دراسة' || $study_status == 'مستمر' || $study_status == 'حصل على الدرجة')
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تاريخ القيد بالدراسة <span class="text-danger">*</span></label>
-                                <input type="date" wire:model.live="registration_date" class="form-control shadow-none">
-                                @error('registration_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            @endif
-
-                            <!-- تاريخ التنفيذ -->
+                            <!-- 1. حقول حالة: تنفيذ دراسة -->
                             @if($study_status == 'تنفيذ دراسة')
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تاريخ تنفيذ الدراسة <span class="text-danger">*</span></label>
-                                <input type="date" wire:model.live="execution_date" class="form-control shadow-none">
-                                @error('execution_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            @endif
-
-                            <!-- تاريخ الحصول على الدرجة وتقدير الدرجة -->
-                            @if($study_status == 'حصل على الدرجة')
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تاريخ الحصول على الدرجة <span class="text-danger">*</span></label>
-                                <input type="date" wire:model.live="nominated_degree_date" class="form-control shadow-none">
-                                @error('nominated_degree_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تقدير الدرجة <span class="text-danger">*</span></label>
-                                <input type="text" wire:model="degree_grade" class="form-control shadow-none" placeholder="اكتب تقدير الدرجة (مثال: ممتاز)...">
-                                @error('degree_grade') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            @endif
-
-                            <!-- حقول الاعتذار -->
-                            @if($study_status == 'اعتذار')
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تاريخ الاعتذار <span class="text-danger">*</span></label>
-                                <input type="date" wire:model.live="apology_date" class="form-control shadow-none">
-                                @error('apology_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">سبب الاعتذار <span class="text-danger">*</span></label>
-                                <input type="text" wire:model="apology_reason" class="form-control shadow-none" placeholder="اكتب سبب الاعتذار...">
-                                @error('apology_reason') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            @endif
-
-                            <!-- حقول عدم القبول بالدراسة -->
-                            @if($study_status == 'عدم القبول بالدراسة')
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">تاريخ الرفض <span class="text-danger">*</span></label>
-                                <input type="date" wire:model="rejection_date" class="form-control shadow-none">
-                                @error('rejection_date') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold text-secondary mb-1">سبب الرفض <span class="text-danger">*</span></label>
-                                <input type="text" wire:model="rejection_reason" class="form-control shadow-none" placeholder="اكتب سبب عدم القبول...">
-                                @error('rejection_reason') <span class="text-danger text-sm">{{ $message }}</span> @enderror
-                            </div>
-                            @endif
-
-                            <!-- عرض مدة الدراسة المحسوبة فوراً -->
-                            @if($study_status != 'عدم القبول بالدراسة')
-                            <div class="col-12 mt-2">
-                                <div class="p-3 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
-                                    <span class="text-dark fw-bold">
-                                        <i class="bi bi-clock-history text-primary me-2"></i> إجمالي مدة الدراسة:
-                                    </span>
-                                    <span class="badge bg-primary fs-6 px-3 py-2 font-monospace">
-                                        {{ $years_from_registration ?? '-' }}
-                                    </span>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">تاريخ تنفيذ الدراسة</label>
+                                        <input type="date" wire:model.live="execution_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">تاريخ القيد بالدراسة</label>
+                                        <input type="date" wire:model.live="registration_date" class="form-control">
+                                    </div>
                                 </div>
-                            </div>
                             @endif
+
+                            <!-- 2. حقول حالة: حصل على الدرجة -->
+                            @if($study_status == 'حصل على الدرجة')
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">تاريخ القيد بالدراسة</label>
+                                        <input type="date" wire:model.live="registration_date" class="form-control">
+                                    </div>
+                                    @if($study_status == 'تنفيذ دراسة')
+                                        <div class="form-group">
+                                            <label>تاريخ تنفيذ الدراسة</label>
+                                            <input type="date" wire:model="execution_date" class="form-control">
+                                            @error('execution_date') <span class="text-danger">{{ $message }}</span> @enderror
+                                        </div>
+                                    @endif
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">تاريخ الحصول على الدرجة</label>
+                                        <input type="date" wire:model.live="nominated_degree_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">تقدير الحصول على الدرجة</label>
+                                        <input type="text" wire:model="degree_grade" class="form-control" placeholder="مثال: امتياز، جيد جداً">
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- 3. حقول حالة: اعتذار (تمت الإضافة بناءً على المراجعة) -->
+                            @if($study_status == 'اعتذار')
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">تاريخ الاعتذار</label>
+                                        <input type="date" wire:model.live="apology_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">سبب الاعتذار</label>
+                                        <textarea wire:model="apology_reason" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- 4. حقول حالة: عدم القبول بالدراسة -->
+                            @if($study_status == 'عدم القبول بالدراسة')
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">تاريخ عدم القبول بالدراسة</label>
+                                        <input type="date" wire:model="rejection_date" class="form-control">
+                                    </div>
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">سبب عدم القبول بالدراسة</label>
+                                        <textarea wire:model="rejection_reason" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- حقل مدة الدراسة (يظهر في جميع الحالات ويتحدث تلقائياً) -->
+                            <div class="mb-3 alert alert-info">
+                                <label class="form-label fw-bold">مدة الدراسة المحسوبة:</label>
+                                <div class="fs-5 text-dark">{{ $years_from_registration }}</div>
+                            </div>
 
                         </div>
                     </div>

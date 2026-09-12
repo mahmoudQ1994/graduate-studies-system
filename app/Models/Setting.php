@@ -13,5 +13,10 @@ class Setting extends Model
         'administration_name',
         'department_name',
         'logo_path',
+        'fiscal_year',
+        'fiscal_year_start',
+        'fiscal_year_end',
+        'director_name',
+        'phone'
     ];
 }

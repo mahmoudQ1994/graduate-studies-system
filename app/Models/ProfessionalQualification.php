@@ -12,7 +12,7 @@ class ProfessionalQualification extends Model
     protected $fillable = [
         'health_professional_id',
         'university',
-        'faculty',
+        'qualification',
         'graduation_batch',
         'general_grade',
         'subject_grade',

@@ -16,7 +16,13 @@ use App\Livewire\Postgraduate\PostgraduateEdit; // تصحيح حرف L الكب�
 use App\Livewire\Postgraduate\ManageStudyLeaves;
 use App\Livewire\Postgraduate\ManageStudyStatus;
 use App\Livewire\Postgraduate\ManageStudyPauses;
-use App\livewire\Reports\GeneralDashboard;
+use App\Livewire\Postgraduate\OfficialLetterPrint;
+use App\Livewire\Reports\GeneralDashboard;
+use App\Livewire\Postgraduate\ImportExport;
+use App\Livewire\Reports\LeaveMovementReport;
+use App\Livewire\Reports\MedicalDegreesArchiveReport;
+use App\Livewire\Reports\StudyPausesReport;
+use App\Livewire\Reports\SemiAnnualCandidatesReport;
 
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
@@ -92,13 +98,29 @@ Route::middleware(['auth'])->group(function () {
         // مسار إدارة إيقاف القيد
         Route::get('/study-pauses', ManageStudyPauses::class)->name('study-pauses');
 
+        // مسار طباعة الخطاب الرسمي
+        Route::get('/official-letter-print', OfficialLetterPrint::class)->name('official-letter-print');
+
         // مسار لوحة التحكم العامة
         Route::get('/general-dashboard', GeneralDashboard::class)->name('general-dashboard');
 
+        // مسار عرض تقرير اجازات التفرغ
+        Route::get('/leave-movement-report', LeaveMovementReport::class)->name('leave-movement-report');
+
+        // مسار عرض تقرير ارشيف الحاصلين على الدرجات العلمية
+        Route::get('/medical-degrees-archive-report', MedicalDegreesArchiveReport::class)->name('medical-degrees-archive-report');
+
+        // مسار عرض تقرير إيقاف القيد
+        Route::get('/study-pauses-report', StudyPausesReport::class)->name('study-pauses-report');
+
+        // مسار عرض تقرير المرشحين للنصف السنوي
+        Route::get('/semi-annual-candidates-report', SemiAnnualCandidatesReport::class)->name('semi-annual-candidates-report');
+
+        // مسار استيراد وتصدير بيانات الدراسات العليا
+        Route::get('/import-export', ImportExport::class)->name('import-export');
 
         Route::view('profile', 'profile')->name('profile');
     });
-
 
 });
 

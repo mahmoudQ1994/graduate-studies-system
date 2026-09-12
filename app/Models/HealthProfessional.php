@@ -38,9 +38,10 @@ class HealthProfessional extends Model
     }
 
     // العلاقة: الموظف له سجل حركة نيابة أو تكليف
-    public function movement()
+// العلاقة: الموظف له عدة سجلات حركة نيابة أو تكليف
+    public function medicalMovements()
     {
-        return $this->hasOne(MedicalMovement::class);
+        return $this->hasMany(MedicalMovement::class, 'health_professional_id');
     }
 
     // العلاقة: الموظف له عدة قيود أو تسجيلات بالدراسات العليا

@@ -222,16 +222,16 @@
                                         <i class="bi bi-info-circle me-1"></i>البيانات الأساسية والوظيفية
                                     </h6>
                                     <div class="row g-2 style-details" style="font-size: 11px;">
-                                        <div class="col-5 text-muted">الاسم الكامل:</div>
+                                        <div class="col-3 text-muted">الاسم الكامل:</div>
                                         <div class="col-7 fw-bold text-dark">{{ $candidate->name }}</div>
-                                        <div class="col-5 text-muted">الرقم القومي:</div>
+                                        <div class="col-3 text-muted">الرقم القومي:</div>
                                         <div class="col-7 fw-bold text-primary font-monospace">{{ $candidate->national_id }}</div>
-                                        <div class="col-5 text-muted">رقم الهاتف:</div>
+                                        <div class="col-3 text-muted">رقم الهاتف:</div>
                                         <div class="col-7 fw-bold font-monospace">{{ $candidate->phone ?? 'غير مسجل' }}</div>
-                                        <div class="col-5 text-muted">جهة العمل الحالي:</div>
+                                        <div class="col-3 text-muted">جهة العمل الحالي:</div>
                                         <div class="col-7 fw-bold">{{ $candidate->facility->name ?? 'غير محددة' }}</div>
-                                        <div class="col-5 text-muted">المركز التابع له:</div>
-                                        <div class="col-7 fw-bold">{{ $candidate->facility->district->name ?? 'غير محدد' }}</div>
+                                        <div class="col-3 text-muted">القطاع التابع له:</div>
+                                        <div class="col-7 fw-bold">{{ $candidate->facility->sector->name ?? 'غير محدد' }}</div>
                                     </div>
                                 </div>
 
@@ -240,14 +240,32 @@
                                         <i class="bi bi-mortarboard me-1"></i>المؤهل والتخرج الأكاديمي
                                     </h6>
                                     <div class="row g-2 style-details" style="font-size: 11px;">
-                                        <div class="col-5 text-muted">الجامعة والكلية:</div>
-                                        <div class="col-7 fw-bold">{{ $candidate->qualification->university ?? '—' }} ({{ $candidate->qualification->faculty ?? '—' }})</div>
-                                        <div class="col-5 text-muted">دفعة التخرج:</div>
+                                        <div class="col-3 text-muted">  المؤهل :</div>
+                                        <div class="col-7 fw-bold"> {{ $candidate->qualification->qualification ?? '—' }}</div>
+                                        <div class="col-3 text-muted">دفعة التخرج:</div>
                                         <div class="col-7 fw-bold text-dark font-monospace">{{ $candidate->qualification->graduation_batch ?? '—' }}</div>
-                                        <div class="col-5 text-muted">التقدير العام:</div>
+                                        <div class="col-3 text-muted">التقدير العام:</div>
                                         <div class="col-7 fw-bold text-success">{{ $candidate->qualification->general_grade ?? '—' }}</div>
-                                        <div class="col-5 text-muted">تقدير مادة التخصص:</div>
+                                        <div class="col-3 text-muted">تقدير مادة التخصص:</div>
                                         <div class="col-7 fw-bold text-info">{{ $candidate->qualification->subject_grade ?? '—' }}</div>
+
+                                        <div class="col-3 text-muted">النيابة:</div>
+                                        <div class="col-7 fw-bold">
+                                            @php
+                                                $latestMovement = optional($candidate->medicalMovements)->first() ?? $candidate;
+                                                $specialty = $candidate->movement_specialty ?? optional($latestMovement)->specialty;
+                                                $date = $candidate->movement_date ?? optional($latestMovement)->movement_date;
+                                            @endphp
+
+                                            @if(!empty($specialty))
+                                                {{ $specialty }}
+                                                @if(!empty($date))
+                                                    <span class="text-muted fw-normal font-monospace">({{ $date }})</span>
+                                                @endif
+                                            @else
+                                                <span class="text-muted fw-normal"> لا يوجد له نيابة </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -259,16 +277,20 @@
                         <h6 class="fw-bold text-primary mb-0" style="font-size: 12px;">
                             <i class="bi bi-journal-bookmark-fill me-1"></i>سجل قيد الدراسات العليا وأجازات التفرغ وإيقاف القيد
                         </h6>
-                        <span class="badge bg-secondary rounded-pill" style="font-size: 10px;">{{ $candidate->postgraduateRegistrations->count() }} طلب / درجة مسجلة</span>
+                        <span class="badge bg-secondary rounded-pill" style="font-size: 10px;">
+                            {{ $candidate->postgraduateRegistrations->count() }} طلب / درجة مسجلة</span>
                     </div>
 
                     @forelse($candidate->postgraduateRegistrations as $reg)
                         <div class="card border-0 shadow-sm rounded-3 mb-3 overflow-hidden">
                             <div class="card-header bg-light py-2 px-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
                                 <div>
-                                    <span class="badge bg-primary me-2 print-text-dark" style="font-size: 10px;">{{ $reg->required_degree }}</span>
-                                    <span class="fw-bold text-dark print-text-dark" style="font-size: 11px;">تخصص: {{ $reg->required_specialty }}</span>
-                                    <span class="text-muted extra-small ms-2 font-monospace" style="font-size: 9px;">({{ $reg->required_university ?? $reg->university ?? 'جامعة غير محددة' }})</span>
+                                    <span class="badge bg-primary me-2 print-text-dark"
+                                     style="font-size: 10px;">{{ $reg->required_degree }}</span>
+                                    <span class="fw-bold text-dark print-text-dark"
+                                    style="font-size: 11px;">تخصص: {{ $reg->required_specialty }}</span>
+                                    <span class="text-muted extra-small ms-2 font-monospace"
+                                     style="font-size: 9px;">({{ $reg->required_university ?? $reg->university ?? 'جامعة غير محددة' }})</span>
                                 </div>
                                 <div>
                                     @if(in_array($reg->study_status, ['مستمر', 'قيد الدراسة', 'مفتوح']))
@@ -284,36 +306,57 @@
                                 <div class="row g-2 mb-3 bg-light p-2 rounded-2 border" style="font-size: 10px;">
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">تاريخ تقديم الطلب:</span>
-                                        <strong class="font-monospace text-dark">{{ $reg->application_date ?? ($reg->created_at?->format('Y-m-d') ?? '—') }}</strong>
+                                        <strong class="font-monospace text-dark">
+                                            {{ $reg->application_date ? \Carbon\Carbon::parse($reg->created_at)->format('Y-m-d') : '—' }}
+                                        </strong>
+                                    </div>
+                                    <div class="col-md-2 col-6">
+                                        <span class="text-muted d-block extra-small"> نوع الترشج للدراسة:</span>
+                                        <strong>
+                                            {{ $reg->sponsorship_type ?? '- ' }}
+                                        </strong>
                                     </div>
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">تاريخ القيد بالدراسة:</span>
-                                        <strong class="font-monospace text-success">{{ $reg->registration_date ?? '—' }}</strong>
+                                        <strong class="font-monospace text-success">
+                                            {{ $reg->registration_date ? \Carbon\Carbon::parse($reg->registration_date)->format('Y-m-d') : '—' }}
+                                        </strong>
                                     </div>
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">تاريخ تنفيذ الدراسة:</span>
-                                        <strong class="font-monospace text-primary">{{ $reg->registration_date ?? '—' }}</strong>
+                                        <strong class="font-monospace text-primary">
+                                            {{ $reg->execution_date ? \Carbon\Carbon::parse($reg->execution_date)->format('Y-m-d') : '—' }}                                        </strong>
                                     </div>
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">حالة الدراسة:</span>
-                                        <strong>{{ $reg->study_status ?? 'قيد الدراسة' }}</strong>
+                                        <strong>
+                                            {{ $reg->study_status ?? 'قيد الدراسة' }}
+                                        </strong>
                                     </div>
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">تاريخ الحصول / الاعتذار:</span>
-                                        <strong class="text-success font-monospace">{{ $reg->nominated_degree_date ?? '—' }}</strong>
+                                        <strong class="text-success font-monospace">
+                                            {{ $reg->nominated_degree_date ? \Carbon\Carbon::parse($reg->nominated_degree_date)->format('Y-m-d') : '—' }}
+                                        </strong>
                                     </div>
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">سنوات الدراسة:</span>
-                                        <strong class="text-success font-monospace">{{ $reg->years_from_registration ? $reg->years_from_registration . ' ' : '—' }}</strong>
+                                        <strong class="text-success font-monospace">
+                                            {{ $reg->years_from_registration ? $reg->years_from_registration . ' ' : '—' }}
+                                        </strong>
                                     </div>
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">تاريخ عدم قبول الدراسة  :</span>
-                                        <strong class="text-danger font-monospace">{{ $reg->rejection_date ?? '—' }}</strong>
+                                        <strong class="text-danger font-monospace">
+                                            {{ $reg->rejection_date ?? '—' }}
+                                        </strong>
                                     </div>
 
                                     <div class="col-md-2 col-6">
                                         <span class="text-muted d-block extra-small">سبب عدم قبول الدراسة  :</span>
-                                        <strong class="text-danger">{{ $reg->rejection_reason ?? '—' }}</strong>
+                                        <strong class="text-danger">
+                                            {{ $reg->rejection_reason ?? '—' }}
+                                        </strong>
                                     </div>
 
                                 <!-- جدول أجازات التفرغ -->

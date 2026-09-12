@@ -8,9 +8,18 @@ use App\Models\PostgraduateRegistration;
 use App\Models\ProfessionalQualification;
 use App\Models\MedicalMovement;
 use App\Models\Facility;
+use App\Models\User;
 
 class CandidateRegister extends Component
 {
+
+    /**
+     * تعريف علاقة المستخدم (User)
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
     public $activeTab = 1;
 
     // بيانات الهوية والأساسية
@@ -23,7 +32,7 @@ class CandidateRegister extends Component
 
     // المؤهلات وحركة النيابة
     public $university;
-    public $faculty;
+    public $qualification;
     public $graduation_batch;
     public $general_grade;
     public $total_marks;
@@ -56,20 +65,26 @@ class CandidateRegister extends Component
     public $degree_grade;
     public $isMasterAutoFilled = false;
 
-    // دالة تهيئة المكون
+    /**
+     * دالة تهيئة المكون (Mount)
+     */
     public function mount()
     {
         $this->application_date = date('Y-m-d');
         $this->checkDoctorateEligibility();
     }
 
-    // دالة التنقل بين علامات التبويب (Tabs)
+    /**
+     * دالة التنقل بين علامات التبويب (Tabs)
+     */
     public function setTab($tab)
     {
         $this->activeTab = $tab;
     }
 
-    // دالة التحقق اللحظي عند إدخال أو تغيير الرقم القومي وجلب البيانات السابقة
+    /**
+     * دالة التحقق اللحظي عند إدخال أو تغيير الرقم القومي وجلب البيانات السابقة
+     */
     public function updatedNationalId($value)
     {
         $value = trim($value);
@@ -93,7 +108,7 @@ class CandidateRegister extends Component
             $qualification = ProfessionalQualification::where('health_professional_id', $professional->id)->first();
             if ($qualification) {
                 $this->university = $qualification->university;
-                $this->faculty = $qualification->faculty;
+                $this->qualification = $qualification->qualification;
                 $this->graduation_batch = $qualification->graduation_batch;
                 $this->general_grade = $qualification->general_grade;
                 $this->total_marks = $qualification->total_marks;
@@ -130,9 +145,21 @@ class CandidateRegister extends Component
                     if ($latestReg->study_status === 'حصل على الدرجة' || $latestReg->nominated_degree_status === 'حصل على الدرجة') {
                         $this->prior_study_outcome = 'تم الحصول عليها';
                         $this->prior_degree_date = $latestReg->nominated_degree_date ?? $latestReg->degree_date ?? null;
+
+                        // حفظ قيمة study_status القديمة (التي أصبحت 'حصل على الدرجة') في متغير سبب/موقف الإلغاء
+                        $this->cancellation_reason = $latestReg->study_status;
+
+                        // جلب بيانات الدبلوم أو المؤهل السابق لتعبئتها تلقائياً للماجستير
+                        if ($latestReg->required_degree === 'دبلوم') {
+                            $this->isMasterAutoFilled = true;
+                            $this->master_degree_date = $latestReg->nominated_degree_date ?? $latestReg->degree_date;
+                            $this->degree_grade = $latestReg->general_grade ?? $latestReg->degree_grade;
+                        }
                     } else {
                         $this->prior_study_outcome = 'اعتذر أو تم الإلغاء';
-                        $this->cancellation_reason = $latestReg->cancellation_reason ?? 'اعتذار أو إلغاء سابق';
+
+                        // حفظ قيمة study_status القديمة في متغير سبب/موقف الإلغاء
+                        $this->cancellation_reason = $latestReg->study_status;
                     }
                 }
             } else {
@@ -145,55 +172,68 @@ class CandidateRegister extends Component
         $this->checkDoctorateEligibility();
     }
 
+    /**
+     * دالة التحديث عند تغيير نوع الدراسة المطلوبة
+     */
     public function updatedRequiredDegree($value)
     {
         $this->checkDoctorateEligibility();
     }
 
+    /**
+     * دالة التحديث عند تغيير تاريخ الحصول على الماجستير
+     */
     public function updatedMasterDegreeDate($value)
     {
         $this->checkDoctorateEligibility();
     }
 
+    /**
+     * دالة التحديث عند تغيير تقدير الدرجة العلمية
+     */
     public function updatedDegreeGrade($value)
     {
         $this->checkDoctorateEligibility();
     }
 
+    /**
+     * دالة التحقق من أهلية الترشيح للدكتوراه أو الماجستير بناءً على المؤهلات السابقة
+     */
     public function checkDoctorateEligibility()
     {
         $this->doctorateEligibilityError = null;
 
-        if ($this->required_degree === 'دكتوراة') {
-            $hasMaster = false;
+        if ($this->required_degree === 'دكتوراة' || $this->required_degree === 'ماجستير') {
+            $targetDegree = ($this->required_degree === 'دكتوراة') ? 'ماجستير' : 'دبلوم';
+            $hasPreviousDegree = false;
 
             if (!empty($this->national_id) && strlen($this->national_id) === 14) {
                 $professional = HealthProfessional::where('national_id', $this->national_id)->first();
 
                 if ($professional) {
-                    $masterRecord = PostgraduateRegistration::where('health_professional_id', $professional->id)
-                        ->where('required_degree', 'ماجستير')
+                    $previousRecord = PostgraduateRegistration::where('health_professional_id', $professional->id)
+                        ->where('required_degree', $targetDegree)
                         ->where(function($q) {
                             $q->where('study_status', 'حصل على الدرجة')
-                              ->orWhere('nominated_degree_status', 'حصل على الدرجة');
+                                ->orWhere('nominated_degree_status', 'حصل على الدرجة');
                         })->latest()->first();
 
-                    if ($masterRecord) {
-                        $hasMaster = true;
+                    if ($previousRecord) {
+                        $hasPreviousDegree = true;
                         $this->isMasterAutoFilled = true;
                         if (empty($this->master_degree_date)) {
-                            $this->master_degree_date = $masterRecord->nominated_degree_date ?? $masterRecord->degree_date ?? '';
+                            $this->master_degree_date = $previousRecord->nominated_degree_date ?? $previousRecord->degree_date ?? '';
                         }
                         if (empty($this->degree_grade)) {
-                            $this->degree_grade = $masterRecord->general_grade ?? $masterRecord->degree_grade ?? '';
+                            $this->degree_grade = $previousRecord->general_grade ?? $previousRecord->degree_grade ?? '';
                         }
                     }
                 }
             }
 
-            if (!$hasMaster) {
+            if (!$hasPreviousDegree && $this->required_degree === 'دكتوراة') {
                 if (!empty($this->master_degree_date) && !empty($this->degree_grade)) {
-                    $hasMaster = true;
+                    $hasPreviousDegree = true;
                 } else {
                     $this->isMasterAutoFilled = false;
                     $this->doctorateEligibilityError = 'الترشيح للحصول على درجة الدكتوراه يستوجب الحصول على درجة الماجستير...';
@@ -204,12 +244,15 @@ class CandidateRegister extends Component
         }
     }
 
+    /**
+     * دالة إعادة تعيين بيانات المرشح الأساسية
+     */
     private function resetCandidateData()
     {
         $this->name = '';
         $this->phone = '';
         $this->university = '';
-        $this->faculty = '';
+        $this->qualification = '';
         $this->graduation_batch = '';
         $this->general_grade = '';
         $this->total_marks = '';
@@ -221,6 +264,9 @@ class CandidateRegister extends Component
         $this->resetPriorData();
     }
 
+    /**
+     * دالة إعادة تعيين بيانات القيد السابق
+     */
     private function resetPriorData()
     {
         $this->isPriorAutoFilled = false;
@@ -232,6 +278,9 @@ class CandidateRegister extends Component
         $this->cancellation_reason = '';
     }
 
+    /**
+     * دالة حفظ بيانات المرشح والتسجيل الجديد في قاعدة البيانات
+     */
     public function save()
     {
         $this->validate([
@@ -250,13 +299,13 @@ class CandidateRegister extends Component
             ]
         );
 
-        // حفظ المؤهل التخصصي فقط إذا تم إدخال بيانات تخصه
-        if (!empty($this->university) || !empty($this->faculty)) {
+        if (!empty($this->university) ||  !empty($this->qualification) || !empty($this->graduation_batch) || !empty($this->general_grade) || !empty($this->total_marks) || !empty($this->subject_grade)) {
             ProfessionalQualification::updateOrCreate(
                 ['health_professional_id' => $professional->id],
                 [
                     'university' => $this->university,
-                    'faculty' => $this->faculty,
+                    'qualification' => $this->qualification,
+                    'qualification' => $this->qualification,
                     'graduation_batch' => $this->graduation_batch,
                     'general_grade' => $this->general_grade,
                     'subject_grade' => $this->subject_grade,
@@ -265,7 +314,6 @@ class CandidateRegister extends Component
             );
         }
 
-        // حفظ حركة النيابة فقط للأطباء وإذا وُجدت بيانات
         if (in_array($this->profession, ['طبيب بشري', 'طبيب أسنان'])) {
             if (!empty($this->movement_specialty) || !empty($this->movement_date)) {
                 MedicalMovement::updateOrCreate(
@@ -284,18 +332,29 @@ class CandidateRegister extends Component
             'required_specialty' => $this->required_specialty,
             'required_university' => $this->required_university,
             'sponsorship_type' => $this->sponsorship_type,
-            'application_date' => $this->application_date ?? now(),
+            'application_date' => date('Y-m-d'),
             'study_status' => 'جاري فحص الطلب',
             'nominated_degree_status' => 'جاري فحص الطلب',
+
+            // حقول الترشيح السابق التي تم تفعيل حفظها هنا
+            'prior_registration_status' => $this->prior_registration_status,
+            'prior_registration_study' => $this->prior_registration_study,
+            'prior_registration_year' => $this->prior_registration_year,
+            'cancellation_reason' => $this->cancellation_reason,
+
             'master_degree_date' => $this->master_degree_date,
             'degree_grade' => $this->degree_grade,
+            // 'user_id' => auth()->id(),
         ]);
 
         session()->flash('success', 'تم حفظ تسجيل الترشيح للدراسات العليا بنجاح!');
 
-        return redirect()->route('livewire.postgraduate.candidate-register');
+        return redirect()->route('register');
     }
 
+    /**
+     * دالة عرض صفحة المكون ورسم الواجهة (Render)
+     */
     public function render()
     {
         return view('livewire.postgraduate.candidate-register', [

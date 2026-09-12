@@ -30,11 +30,11 @@ class ManageStudyStatus extends Component
     public $registration_date;
     public $nominated_degree_date;
     public $nominated_degree_status;
-    public $degree_grade; // تقدير الدرجة الجديد
+    public $degree_grade;
     public $apology_date;
     public $apology_reason;
-    public $rejection_date; // تاريخ الرفض
-    public $rejection_reason; // سبب الرفض
+    public $rejection_date;
+    public $rejection_reason;
     public $years_from_registration = '-';
 
     public function updatingSearchName() { $this->resetPage(); }
@@ -48,6 +48,7 @@ class ManageStudyStatus extends Component
         $reg = PostgraduateRegistration::findOrFail($regId);
         $this->selectedRegId = $reg->id;
 
+        // إذا كانت الحالة في قاعدة البيانات 'مستمر' ولديه تاريخ تنفيذ، نعرضه في الواجهة باسم 'تنفيذ دراسة'
         if ($reg->study_status == 'مستمر' && !empty($reg->execution_date)) {
             $this->study_status = 'تنفيذ دراسة';
         } else {
@@ -75,23 +76,12 @@ class ManageStudyStatus extends Component
 
     public function updatedStudyStatus($value)
     {
-        // إعادة ضبط الحقول عند تغيير القائمة المنسدلة
-        $this->execution_date = null;
-        $this->registration_date = null;
-        $this->nominated_degree_date = null;
-        $this->nominated_degree_status = null;
-        $this->degree_grade = null;
-        $this->apology_date = null;
-        $this->apology_reason = null;
-        $this->rejection_date = null;
-        $this->rejection_reason = null;
-
+        // إعادة حساب المدة عند تغيير الحالة بناءً على التواريخ الحالية المعبأة
         $this->calculateStudyDuration();
     }
 
     public function calculateStudyDuration()
     {
-        // عدم القبول لا يحسب له مدة دراسة
         if ($this->study_status == 'عدم القبول بالدراسة' || empty($this->registration_date)) {
             $this->years_from_registration = ($this->study_status == 'عدم القبول بالدراسة') ? 'لا يحسب (مرفود)' : '-';
             return;
@@ -166,10 +156,11 @@ class ManageStudyStatus extends Component
             $dbStudyStatus = 'مستمر';
         }
 
+        // تنفيذ التحديث مع التأكد من إسناد قيمة execution_date بشكل مباشر من المتغير العام
         $reg->update([
             'study_status' => $dbStudyStatus,
-            'execution_date' => ($inputStatus == 'تنفيذ دراسة') ? $this->execution_date : null,
-            'registration_date' => in_array($inputStatus, ['تنفيذ دراسة', 'مستمر', 'حصل على الدرجة']) ? $this->registration_date : null,
+            'execution_date' => ($inputStatus == 'تنفيذ دراسة') ? $this->execution_date : $reg->execution_date,
+            'registration_date' => in_array($inputStatus, ['تنفيذ دراسة', 'مستمر', 'حصل على الدرجة', 'اعتذار']) ? $this->registration_date : $reg->registration_date,
             'nominated_degree_date' => $inputStatus == 'حصل على الدرجة' ? $this->nominated_degree_date : null,
             'nominated_degree_status' => $inputStatus == 'حصل على الدرجة' ? 'حصل على الدرجة' : ($inputStatus == 'اعتذار' ? 'اعتذر ولم يحصل على الدرجة' : null),
             'degree_grade' => $inputStatus == 'حصل على الدرجة' ? $this->degree_grade : null,
@@ -181,7 +172,7 @@ class ManageStudyStatus extends Component
         ]);
 
         $this->selectedRegId = null;
-        session()->flash('success', 'تم تحديث بيانات الدراسة بنجاح.');
+        session()->flash('success', 'تم تحديث بيانات الدراسة للمرشح وحفظ تاريخ التنفيذ بنجاح.');
         $this->dispatch('close-modal');
     }
 

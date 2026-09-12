@@ -1,24 +1,12 @@
 <?php
-
-
-
 namespace App\Livewire\Postgraduate;
-
-
-
 use Livewire\Component;
-
+use Carbon\Carbon;
 use App\Models\PostgraduateRegistration;
-
 use App\Models\HealthProfessional;
-
 use App\Models\Facility;
-
 use App\Models\ProfessionalQualification;
-
 use App\Models\MedicalMovement;
-
-
 
 class PostgraduateEdit extends Component
 
@@ -29,47 +17,22 @@ class PostgraduateEdit extends Component
     public $candidateId;
 
     public $registration;
-
-
-
-
-
     //متغيرات حركة النيابة في أعلى الكلاس
-
     public $movement_specialty;
-
     public $movement_date;
-
-
-
     // متغير التحكم في التبويبات (الأخطاء أو التنقل بين خطوات النموذج)
-
     public $activeTab = 1;
-
-
-
     // --- 1. حقول الهوية والكادر الطبي (جدول health_professionals) ---
-
     public $national_id;
-
     public $name;
-
     public $phone;
-
     public $profession = 'طبيب بشري';
-
     public $facility_id;
 
     public $secondment_facility; // جهة الانتداب
-
-
-
     // --- 2. حقول المؤهل والتخرج (جدول professional_qualifications) ---
-
     public $university;
-
-    public $faculty;
-
+    public $qualification;
     public $graduation_batch;
 
     public $general_grade;
@@ -123,80 +86,40 @@ class PostgraduateEdit extends Component
 
         $this->registration = PostgraduateRegistration::with(['healthProfessional.qualification'])->findOrFail($id);
 
-
-
         $hp = $this->registration->healthProfessional;
-
-
 
         // تعبئة بيانات الكادر الطبي والهوية
 
         if ($hp) {
-
             $this->national_id = $hp->national_id;
-
             $this->name = $hp->name;
-
             $this->phone = $hp->phone ?? '';
-
             $this->profession = $hp->profession ?? 'طبيب بشري';
-
             $this->facility_id = $hp->facility_id ?? '';
-
             $this->secondment_facility = $hp->secondment_facility ?? '';
-
             $this->movement_specialty = $hp->movement_specialty ?? '';
-
             $this->movement_date = $hp->movement_date ?? '';
-
-
-
             // جلب بيانات المؤهل والتخرج من الجدول المرتبط
 
             $qual = $hp->qualification;
-
             if ($qual) {
-
                 $this->university = $qual->university ?? '';
-
-                $this->faculty = $qual->faculty ?? '';
-
+                $this->qualification = $qual->qualification ?? '';
                 $this->graduation_batch = $qual->graduation_batch ?? '';
-
                 $this->general_grade = $qual->general_grade ?? '';
-
                 $this->total_marks = $qual->total_marks ?? '';
-
                 $this->subject_grade = $qual->subject_grade ?? '';
-
             }
 
             // 2. جلب حركة النيابة باستعلام مباشر وآمن تماماً
             $movement = MedicalMovement::where('health_professional_id', $hp->id)->first();
             if ($movement) {
                 $this->movement_specialty = $movement->specialty ?? '';
+                // إذا كانت مخزنة كنص عربي مسبقاً، نتركها كما هي، وإذا كانت تاريخاً نحولها لعرضها
                 $this->movement_date = $movement->movement_date ?? '';
             }
 
         }
-
-
-
-        // جلب بيانات حركة النيابة من الجدول المرتبط medical_movements
-
-        $movement = $hp->medicalMovement; // أو $hp->medicalMovements()->first() حسب تعريف العلاقة
-
-        if ($movement) {
-
-            $this->movement_specialty = $movement->specialty ?? '';
-
-            $this->movement_date = $movement->movement_date ?? '';
-
-        }
-
-
-
-
 
         // تعبئة بيانات الدراسة المطلوبة والقيد السابق
 
@@ -241,111 +164,75 @@ class PostgraduateEdit extends Component
         $this->activeTab = $tab;
 
     }
-
-
-
     /**
-
      * دالة الحفظ والتحديث (Update): تقوم بالتحقق وحفظ التعديلات في الجداول الثلاثة تباعاً
-
      */
-
     public function update()
-
     {
-
         // التحقق من صحة المدخلات الأساسية قبل الحفظ
-
         $this->validate([
-
             'name' => 'required|string|max:255',
-
             'national_id' => 'required|digits:14',
-
             'required_degree' => 'required',
-
             'required_specialty' => 'required|string',
-
             'required_university' => 'required|string',
-
             'sponsorship_type' => 'required',
-
         ]);
 
-
-
         $hp = $this->registration->healthProfessional;
-
-
-
         if ($hp) {
-
             // 1. تحديث جدول الكادر الطبي (البيانات الأساسية وجهة الانتداب)
-
             $hp->update([
-
                 'national_id' => $this->national_id,
-
                 'name' => $this->name,
-
                 'phone' => $this->phone,
-
                 'profession' => $this->profession,
-
                 'facility_id' => $this->facility_id,
-
                 'secondment_facility' => $this->secondment_facility,
-
                 'movement_specialty' => $this->movement_specialty,
-
                 'movement_date' => $this->movement_date,
-
             ]);
 
-
-
             // 2. تحديث أو إنشـاء بيانات المؤهل والتخرج في جدول professional_qualifications
-
             ProfessionalQualification::updateOrCreate(
-
                 ['health_professional_id' => $hp->id],
-
                 [
-
                     'university' => $this->university,
-
-                    'faculty' => $this->faculty,
-
+                    'qualification' => $this->qualification,
                     'graduation_batch' => $this->graduation_batch,
-
                     'general_grade' => $this->general_grade,
-
                     'total_marks' => $this->total_marks,
-
                     'subject_grade' => $this->subject_grade,
-
                 ]
-
             );
 
-            // 3. تحديث أو إنشاء حركة النيابة بشكل مباشر وآمن
-            $movement = MedicalMovement::where('health_professional_id', $hp->id)->first();
+         // معالجة تاريخ حركة النيابة لتحويله إلى نص عربي مثل (سبتمبر 2025)
+            $formattedMovementDate = $this->movement_date;
 
-            if ($movement) {
-                // إذا كان السجل موجوداً، قم بتحديثه
-                $movement->update([
-                    'specialty' => $this->movement_specialty,
-                    'movement_date' => $this->movement_date,
-                ]);
-            } else {
-                // إذا لم يكن موجوداً، قم بإنشاء سجل جديد مرتبط بالطبيب
-                MedicalMovement::create([
-                    'health_professional_id' => $hp->id,
-                    'specialty' => $this->movement_specialty,
-                    'movement_date' => $this->movement_date,
-                ]);
+            if (!empty($this->movement_date)) {
+                try {
+                    // إذا كان القادم من الحقل بصيغة تاريخ مثل 2025-09 أو 2025-09-01
+                    $formattedMovementDate = Carbon::parse($this->movement_date)->locale('ar')->translatedFormat('F Y');
+                } catch (\Exception $e) {
+                    // إذا كان مخزناً مصلحاً أو نصاً عادياً، اتركه كما هو
+                    $formattedMovementDate = $this->movement_date;
+                }
             }
 
+            // تحديث أو إنشاء حركة النيابة
+            $movement = MedicalMovement::updateOrCreate(
+                ['health_professional_id' => $hp->id],
+                [
+                    'specialty' => $this->movement_specialty,
+                    'movement_date' => $formattedMovementDate, // سيحفظ كـ (سبتمبر 2025) مثلاً
+                ]
+            );
+
+            // وتحديثها في الكادر الطبي أيضاً إذا لزم الأمر
+            $hp->update([
+                'movement_specialty' => $this->movement_specialty,
+                'movement_date' => $formattedMovementDate,
+            ]);
         }
 
 

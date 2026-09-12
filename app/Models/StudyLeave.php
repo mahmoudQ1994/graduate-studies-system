@@ -21,7 +21,7 @@ class StudyLeave extends Model
 
     public function registration()
     {
-        return $table->belongsTo(PostgraduateRegistration::class, 'postgraduate_registration_id');
+        return $this->belongsTo(PostgraduateRegistration::class, 'postgraduate_registration_id');
     }
 
     public function user()

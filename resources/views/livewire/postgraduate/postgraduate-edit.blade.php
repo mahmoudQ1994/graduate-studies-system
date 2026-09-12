@@ -13,7 +13,9 @@
     </div>
 
     @if (session()->has('error'))
-        <div class="alert alert-danger py-2 px-3 rounded-3 shadow-sm mb-3 small">{{ session('error') }}</div>
+        <div class="alert alert-danger py-2 px-3 rounded-3 shadow-sm mb-3 small">
+            {{ session('error') }}
+        </div>
     @endif
 
     <!-- Wizard Tabs (مصغرة ومتناسقة) -->
@@ -130,9 +132,26 @@
                 </div>
                 <div class="card-body p-3">
                     <div class="row g-2">
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">جامعة التخرج</label><input type="text" wire:model="university" class="form-control form-control-sm"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">كلية التخرج</label><input type="text" wire:model="faculty" class="form-control form-control-sm"></div>
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">دفعة التخرج</label><input type="text" wire:model="graduation_batch" class="form-control form-control-sm"></div>
+                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">جامعة التخرج</label>
+                            <input type="text" wire:model="university" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold mb-1">المؤهل  </label>
+                            <select wire:model="qualification" class="form-select form-select-sm">
+                                <option value="">-- اختر المؤهل --</option>
+                                <option value="بكتالوريوس الطب  والجراحة ">بكالوريوس الطب والجراحة </option>
+                                <option value="بكالوريوس طب وجراحة القم والاسنان ">بكالوريوس طب وجراحة القم والاسنان </option>
+                                <option value="بكالوريوس العلاج الطبيعى ">بكالوريوس العلاج الطبيعى </option>
+                                <option value="بكالوريوس الصيدلة ">بكالوريوس الصيدلة </option>
+                                <option value="بكالوريوس العلوم فى التمريض ">بكالوريوس العلوم فى التمريض </option>
+                                <option value="بكالوريوس العلوم ">بكالوريوس العلوم </option>
+                                <option value="بكالوريوس تكنولوجيا العلوم الصحية التطبيقية  ">بكالوريوس تكنولوجيا العلوم الصحية التطبيقية  </option>
+                                <option value="بكالوريوس الطب البيطرى  ">بكالوريوس الطب البيطرى  </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">دفعة التخرج</label>
+                            <input type="text" wire:model="graduation_batch" class="form-control form-control-sm">
+                        </div>
 
                         <!-- التقدير العام (قائمة منسدلة) -->
                         <div class="col-md-4">
@@ -162,8 +181,14 @@
                                     <option value="امتياز مع مرتبة الشرف">امتياز مع مرتبة الشرف</option>
                                 </select>
                             </div>
-                            <div class="col-md-6"><label class="form-label small text-primary fw-bold mb-1">تخصص حركة النيابة/الإعارة</label><input type="text" wire:model="movement_specialty" class="form-control form-control-sm"></div>
-                            <div class="col-md-6"><label class="form-label small text-primary fw-bold mb-1">تاريخ حركة النيابة</label><input type="text" wire:model="movement_date" class="form-control form-control-sm" placeholder="YYYY-MM-DD"></div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-primary fw-bold mb-1">تخصص حركة النيابة/الإعارة</label>
+                                <input type="text" wire:model="movement_specialty" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small mb-1 text-secondary">تاريخ حركة النيابة</label>
+                                <input type="month" wire:model="movement_date" class="form-control form-control-sm">
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -207,7 +232,9 @@
                         <div class="col-md-3">
                             <label class="form-label fw-bold small mb-1 text-primary">نوع الترشيح <span class="text-danger">*</span></label>
                             <select wire:model="sponsorship_type" class="form-select form-select-sm border-primary fw-bold">
-                                <option value="وزاري">ترشيح وزاري</option>
+                                <option value="  الاساسية   ">  الاساسية </option>
+                                <option value="  الاستثنائية  ">  الاستثنائية </option>
+                                <option value=" التكميلية "> التكميلية   </option>
                                 <option value="على النفقة الخاصة">على النفقة الخاصة</option>
                             </select>
                         </div>

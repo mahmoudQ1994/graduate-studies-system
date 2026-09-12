@@ -88,7 +88,7 @@
                     <div>
                         <h6 class="fw-bold mb-0" style="font-size: 0.85rem;">تنبيهات استلام العمل العاجلة!</h6>
                         <p class="mb-0 small" style="font-size: 0.75rem;">
-                            يوجد <span class="badge bg-danger rounded-pill px-2 fs-7">{{ $expiringLeaves->count() }}</span> مرشحين انتهت فترة تفرغهم أو متبقي عليها 48 ساعة أو أقل.
+                            يوجد <span class="badge bg-danger rounded-pill px-2 fs-7">{{ $expiringLeaves->count() }}</span> مرشحين انتهت فترة تفرغهم أو متبقي عليها اقل من 30 يوم   .
                         </p>
                     </div>
                 </div>
@@ -150,14 +150,32 @@
                 <tbody>
                     @forelse($registrations as $reg)
                         <tr>
-                            <td class="px-3 fw-bold text-muted text-center">{{ $loop->iteration + ($registrations->currentPage() - 1) * $registrations->perPage() }}</td>
-                            <td class="fw-bold text-dark text-start ps-4">{{ $reg->healthProfessional->name ?? 'غير محدد' }}</td>
-                            <td class="text-center"><span class="badge bg-light text-dark border px-2 py-1">{{ $reg->healthProfessional->profession ?? '-' }}</span></td>
-                            <td class="font-monospace text-center text-muted">{{ $reg->healthProfessional->national_id ?? '-' }}</td>
-                            <td class="text-center fw-medium text-secondary">{{ $reg->required_degree ?? '-' }}</td>
-                            <td class="font-monospace text-center text-muted">{{ $reg->registration_date ?? '-' }}</td>
-                            <td class="text-center">{{ $reg->required_university ?? '-' }}</td>
-                            <td class="text-center text-muted">{{ $reg->healthProfessional->secondment_facility ?? '-' }}</td>
+                            <td class="px-3 fw-bold text-muted text-center">
+                                {{ $loop->iteration + ($registrations->currentPage() - 1) * $registrations->perPage() }}
+                            </td>
+                            <td class="fw-bold text-dark text-start ps-4">
+                                {{ $reg->healthProfessional->name ?? 'غير محدد' }}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border px-2 py-1">
+                                    {{ $reg->healthProfessional->profession ?? '-' }}
+                                </span>
+                            </td>
+                            <td class="font-monospace text-center text-muted">
+                                {{ $reg->healthProfessional->national_id ?? '-' }}
+                            </td>
+                            <td class="text-center fw-medium text-secondary">
+                                {{ $reg->required_degree ?? '-' }}
+                            </td>
+                            <td class="font-monospace text-center text-muted">
+                                {{ $reg->registration_date ? \Carbon\Carbon::parse($reg->registration_date)->format('Y-m-d') : '-' }}
+                            </td>
+                            <td class="text-center">
+                                {{ $reg->required_university ?? '-' }}
+                            </td>
+                            <td class="text-center text-muted">
+                                {{ $reg->healthProfessional->secondment_facility ?? '-' }}
+                            </td>
 
                             <!-- عمود موقف الدراسة -->
                             <td class="text-center">
@@ -248,8 +266,8 @@
                                     @endphp
                                     <tr>
                                         <td class="fw-bold text-dark">{{ $exp->healthProfessional->name ?? 'غير محدد' }}</td>
-                                        <td>{{ $exp->healthProfessional->job_title ?? $exp->study_program ?? '-' }}</td>
-                                        <td>{{ $exp->university ?? $exp->healthProfessional->workplace ?? '-' }}</td>
+                                        <td>{{ $exp->healthProfessional->profession ?? $exp->study_program ?? '-' }}</td>
+                                        <td>{{ $exp->university ?? $exp->healthProfessional->secondment_facility ?? '-' }}</td>
                                         <td class="font-monospace text-primary fw-bold">{{ $exp->healthProfessional->phone ?? $exp->phone ?? '-' }}</td>
                                         <td class="text-center font-monospace">{{ $lastLeave->start_date ?? '-' }}</td>
                                         <td class="text-center font-monospace fw-bold text-danger">{{ $lastLeave->end_date ?? '-' }}</td>
@@ -300,6 +318,12 @@
                         <div class="alert alert-success border-0 shadow-sm rounded-3 mb-2 p-2 px-3 d-flex align-items-center">
                             <i class="bi bi-check-circle-fill me-2 fs-6 text-success"></i>
                             <div style="font-size: 0.85rem;">{{ session('modal_success') }}</div>
+                        </div>
+                    @endif
+                    @if (session()->has('modal_error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('modal_error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
 

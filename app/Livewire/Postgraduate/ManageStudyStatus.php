@@ -156,19 +156,40 @@ class ManageStudyStatus extends Component
             $dbStudyStatus = 'مستمر';
         }
 
-        // تنفيذ التحديث مع التأكد من إسناد قيمة execution_date بشكل مباشر من المتغير العام
+        // تنسيق وتنظيف التواريخ لضمان حفظها بصيغة Y-m-d فقط بدون أي أجزاء خاصة بالوقت
+        $formattedExecutionDate = (($inputStatus == 'تنفيذ دراسة') && !empty($this->execution_date))
+            ? Carbon::parse($this->execution_date)->format('Y-m-d')
+            : $reg->execution_date;
+
+        $formattedRegistrationDate = (in_array($inputStatus, ['تنفيذ دراسة', 'مستمر', 'حصل على الدرجة', 'اعتذار']) && !empty($this->registration_date))
+            ? Carbon::parse($this->registration_date)->format('Y-m-d')
+            : $reg->registration_date;
+
+        $formattedNominatedDegreeDate = (($inputStatus == 'حصل على الدرجة') && !empty($this->nominated_degree_date))
+            ? Carbon::parse($this->nominated_degree_date)->format('Y-m-d')
+            : null;
+
+        $formattedApologyDate = (($inputStatus == 'اعتذار') && !empty($this->apology_date))
+            ? Carbon::parse($this->apology_date)->format('Y-m-d')
+            : null;
+
+        $formattedRejectionDate = (($inputStatus == 'عدم القبول بالدراسة') && !empty($this->rejection_date))
+            ? Carbon::parse($this->rejection_date)->format('Y-m-d')
+            : null;
+
+        // تنفيذ التحديث بالقيم المنظفة
         $reg->update([
-            'study_status' => $dbStudyStatus,
-            'execution_date' => ($inputStatus == 'تنفيذ دراسة') ? $this->execution_date : $reg->execution_date,
-            'registration_date' => in_array($inputStatus, ['تنفيذ دراسة', 'مستمر', 'حصل على الدرجة', 'اعتذار']) ? $this->registration_date : $reg->registration_date,
-            'nominated_degree_date' => $inputStatus == 'حصل على الدرجة' ? $this->nominated_degree_date : null,
-            'nominated_degree_status' => $inputStatus == 'حصل على الدرجة' ? 'حصل على الدرجة' : ($inputStatus == 'اعتذار' ? 'اعتذر ولم يحصل على الدرجة' : null),
-            'degree_grade' => $inputStatus == 'حصل على الدرجة' ? $this->degree_grade : null,
-            'apology_date' => $inputStatus == 'اعتذار' ? $this->apology_date : null,
-            'apology_reason' => $inputStatus == 'اعتذار' ? $this->apology_reason : null,
-            'rejection_date' => $inputStatus == 'عدم القبول بالدراسة' ? $this->rejection_date : null,
-            'rejection_reason' => $inputStatus == 'عدم القبول بالدراسة' ? $this->rejection_reason : null,
-            'years_from_registration' => $this->years_from_registration,
+            'study_status'              => $dbStudyStatus,
+            'execution_date'            => $formattedExecutionDate,
+            'registration_date'         => $formattedRegistrationDate,
+            'nominated_degree_date'     => $formattedNominatedDegreeDate,
+            'nominated_degree_status'   => $inputStatus == 'حصل على الدرجة' ? 'حصل على الدرجة' : ($inputStatus == 'اعتذار' ? 'اعتذر ولم يحصل على الدرجة' : null),
+            'degree_grade'              => $inputStatus == 'حصل على الدرجة' ? $this->degree_grade : null,
+            'apology_date'              => $formattedApologyDate,
+            'apology_reason'            => $inputStatus == 'اعتذار' ? $this->apology_reason : null,
+            'rejection_date'            => $formattedRejectionDate,
+            'rejection_reason'          => $inputStatus == 'عدم القبول بالدراسة' ? $this->rejection_reason : null,
+            'years_from_registration'   => $this->years_from_registration,
         ]);
 
         $this->selectedRegId = null;

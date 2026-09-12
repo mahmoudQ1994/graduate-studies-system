@@ -146,50 +146,77 @@ class ManageStudyLeaves extends Component
     }
 
     public function saveLeave()
-    {
-        $this->validate([
-            'leave_type' => 'required',
-            'start_date' => 'required|date',
-            'end_date'   => 'nullable|date|after_or_equal:start_date',
-        ]);
+{
+    $this->validate([
+        'leave_type' => 'required',
+        'start_date' => 'required|date',
+        'end_date'   => 'nullable|date|after_or_equal:start_date',
+    ]);
 
-        $durationText = null;
-        if ($this->start_date && $this->end_date) {
-            $durationText = $this->calculated_duration_text !== '-' ? $this->calculated_duration_text : static::getFormattedDuration($this->start_date, $this->end_date);
-        }
-
-        if ($this->editing_leave_id) {
-            $leave = StudyLeave::findOrFail($this->editing_leave_id);
-            $leave->update([
-                'leave_type'     => $this->leave_type,
-                'start_date'     => $this->start_date,
-                'end_date'       => $this->end_date,
-                'duration_years' => $durationText,
-                'notes'          => $this->notes,
-                'user_id'        => auth()->id(), // تسجيل المسؤول عن آخر تعديل
-            ]);
-        } else {
-            StudyLeave::create([
-                'postgraduate_registration_id' => $this->selectedRegId,
-                'leave_type'                   => $this->leave_type,
-                'start_date'                   => $this->start_date,
-                'end_date'                     => $this->end_date,
-                'duration_years'               => $durationText,
-                'notes'                        => $this->notes,
-                'user_id'                      => auth()->id(), // تسجيل المستخدم الفعلي عند الإنشاء
-            ]);
-        }
-
-        // تحديث نوع التفرغ في السجل الرئيسي
-        $this->selectedReg->update([
-            'study_leave_type' => $this->leave_type,
-            'user_id'          => auth()->id(), // اختياري لتحديث السجل الرئيسي أيضاً
-        ]);
-
-        $this->selectedReg->refresh();
-        $this->resetLeaveForm();
-        session()->flash('modal_success', 'تم حفظ بيانات التفرغ بنجاح.');
+    // 1. التحقق أن موقف الدراسة الحالي للمرشح هو "مستمر" أو "مقيد بالدراسة"
+    // (تأكد من اسم الحقل أو القيمة الدقيقة لحالة القيد في جدول PostgraduateRegistration لديك)
+    if (!$this->selectedReg || $this->selectedReg->study_status !== 'مستمر') { // استبدل 'active' بالقيمة التي تعبر عن "مستمر/مقيد" في قاعدة بياناتك
+        session()->flash('modal_error', 'عذراً، لا يمكن تسجيل إجازة تفرغ لأن موقف الدراسة للمرشح غير مستمر أو غير مقيد.');
+        return;
     }
+
+    // 2. التحقق من عدم وجود تداخل في تواريخ الإجازات لنفس المرشح
+    $overlappingLeave = StudyLeave::where('postgraduate_registration_id', $this->selectedRegId)
+        ->when($this->editing_leave_id, function ($query) {
+            // استثناء الإجازة الحالية في حال التعديل
+            $query->where('id', '!=', $this->editing_leave_id);
+        })
+        ->where(function ($query) {
+            $query->whereBetween('start_date', [$this->start_date, $this->end_date])
+                  ->orWhereBetween('end_date', [$this->start_date, $this->end_date])
+                  ->orWhere(function ($q) {
+                      $q->where('start_date', '<=', $this->start_date)
+                        ->where('end_date', '>=', $this->end_date);
+                  });
+        })
+        ->exists();
+
+    if ($overlappingLeave) {
+        session()->flash('modal_error', 'فترة الإجازة المطلوبة تتداخل مع فترة إجازة أخرى مسجلة مسبقاً لهذا المرشح.');
+        return;
+    }
+
+    $durationText = null;
+    if ($this->start_date && $this->end_date) {
+        $durationText = $this->calculated_duration_text !== '-' ? $this->calculated_duration_text : static::getFormattedDuration($this->start_date, $this->end_date);
+    }
+
+    if ($this->editing_leave_id) {
+        $leave = StudyLeave::findOrFail($this->editing_leave_id);
+        $leave->update([
+            'leave_type'     => $this->leave_type,
+            'start_date'     => $this->start_date,
+            'end_date'       => $this->end_date,
+            'duration_years' => $durationText,
+            'notes'          => $this->notes,
+            'user_id'        => auth()->id(),
+        ]);
+    } else {
+        StudyLeave::create([
+            'postgraduate_registration_id' => $this->selectedRegId,
+            'leave_type'                   => $this->leave_type,
+            'start_date'                   => $this->start_date,
+            'end_date'                     => $this->end_date,
+            'duration_years'               => $durationText,
+            'notes'                        => $this->notes,
+            'user_id'                      => auth()->id(),
+        ]);
+    }
+
+    $this->selectedReg->update([
+        'study_leave_type' => $this->leave_type,
+        'user_id'          => auth()->id(),
+    ]);
+
+    $this->selectedReg->refresh();
+    $this->resetLeaveForm();
+    session()->flash('modal_success', 'تم حفظ بيانات التفرغ بنجاح.');
+}
 
     public function returnToWork($leaveId)
     {

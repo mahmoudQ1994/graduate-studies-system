@@ -118,8 +118,11 @@ class CandidateRegister extends Component
             // 2. جلب بيانات حركة النيابة السابقة إن وجدت لعرضها في الشاشة
             $movement = MedicalMovement::where('health_professional_id', $professional->id)->first();
             if ($movement) {
-                $this->movement_specialty = $movement->specialty;
-                $this->movement_date = $movement->movement_date;
+                    $this->movement_specialty = $movement->specialty;
+                    // التحقق هل القيمة بالصيغة القياسية Y-m أو معالجتها بأمان
+                    $this->movement_date = preg_match('/^\d{4}-\d{2}$/', $movement->movement_date)
+                        ? $movement->movement_date
+                        : null;
             }
 
             // 3. جلب آخر تسجيل دراسات عليا
@@ -299,12 +302,13 @@ class CandidateRegister extends Component
             ]
         );
 
-        if (!empty($this->university) ||  !empty($this->qualification) || !empty($this->graduation_batch) || !empty($this->general_grade) || !empty($this->total_marks) || !empty($this->subject_grade)) {
+        if (!empty($this->university) || !empty($this->qualification) || !empty($this->graduation_batch)
+            || !empty($this->general_grade) || !empty($this->total_marks) ||
+         !empty($this->subject_grade)) {
             ProfessionalQualification::updateOrCreate(
                 ['health_professional_id' => $professional->id],
                 [
                     'university' => $this->university,
-                    'qualification' => $this->qualification,
                     'qualification' => $this->qualification,
                     'graduation_batch' => $this->graduation_batch,
                     'general_grade' => $this->general_grade,
@@ -313,7 +317,7 @@ class CandidateRegister extends Component
                 ]
             );
         }
-
+        
         if (in_array($this->profession, ['طبيب بشري', 'طبيب أسنان'])) {
             if (!empty($this->movement_specialty) || !empty($this->movement_date)) {
                 MedicalMovement::updateOrCreate(

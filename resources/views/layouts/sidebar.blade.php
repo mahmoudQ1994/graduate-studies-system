@@ -78,6 +78,38 @@
                                 <i class="bi bi-calendar2-week me-1"></i> أجازات التفرغ الدراسي
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                        <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between {{ request()->routeIs('postgraduate.*') ? '' : 'collapsed' }}"
+                        data-bs-toggle="collapse"
+                        href="#trainingSubMenu"
+                        role="button"
+                        aria-expanded="{{ request()->routeIs('postgraduate.*') ? 'true' : 'false' }}">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-medical-fill fs-6"></i>
+                                <span>الإفاد للتدريب</span>
+                            </div>
+                            <i class="bi bi-chevron-down extra-small"></i>
+                        </a>
+
+                        <div class="collapse {{ request()->routeIs('postgraduate.*') ? 'show' : '' }} ms-2 mt-1" id="trainingSubMenu">
+                            <ul class="nav flex-column gap-1">
+                                <li class="nav-item">
+                                    <a href="{{ route('postgraduate.training-secondment') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.training-secondment') ? 'active text-white fw-bold bg-primary bg-opacity-25' : 'text-white opacity-75' }}">
+                                        <i class="bi bi-journal-plus fs-6 ms-1"></i>
+                                        <span>تسجيل إفاد للتدريب</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('postgraduate.training-secondment-index') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.training-secondment-index') ? 'active text-white fw-bold bg-primary bg-opacity-25' : 'text-white opacity-75' }}">
+                                        <i class="bi bi-list-check fs-6 ms-1"></i>
+                                        <span>عرض الموفدين</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
                         <li class="nav-item">
                             <a href="{{ route('postgraduate.study-pauses') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.study-pauses') ? 'active bg-primary text-white' : 'text-white opacity-75' }}" wire:navigate>
                                 <i class="bi bi-pause-circle-fill me-1"></i> إدارة إيقاف القيد
@@ -99,6 +131,13 @@
                                     <li>
                                         <a href="{{ route('postgraduate.official-letter-print') }}" class="nav-link py-1 px-2 small text-white opacity-75" wire:navigate>
                                             <i class="bi bi-file-earmark-text me-1"></i> كشف الترشيح للدراسة
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a href="{{ route('postgraduate.print-training-memo') }}" class="nav-link {{ request()->routeIs('postgraduate.print-training-memo') ? 'active' : '' }}">
+                                            <i class="bi bi-file-earmark-text ms-2"></i>
+                                            <span>مذكرة عرض الإفاد</span>
                                         </a>
                                     </li>
                                 </ul>
@@ -135,6 +174,12 @@
                                     <li>
                                         <a href="{{ route('postgraduate.study-pauses-report') }}" class="nav-link py-1 px-2 small text-white opacity-75" wire:navigate>
                                             <i class="bi bi-pause-circle me-1"></i>   تقرير متابعة حالات إيقاف القيد
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('postgraduate.reports.training') }}" class="nav-link {{ request()->routeIs('reports.training') ? 'active' : '' }}">
+                                            <i class="bi bi-file-earmark-text-fill me-2"></i>
+                                            <span>تقرير الإفاد للتدريب</span>
                                         </a>
                                     </li>
                                     <li>

@@ -77,11 +77,7 @@ class PostgraduateEdit extends Component
     public function mount($id)
 
     {
-
         $this->candidateId = $id;
-
-
-
         // جلب سجل التسجيل مع جلب بيانات الكادر الطبي والمؤهل التابع له عبر العلاقات
 
         $this->registration = PostgraduateRegistration::with(['healthProfessional.qualification'])->findOrFail($id);
@@ -113,11 +109,12 @@ class PostgraduateEdit extends Component
 
             // 2. جلب حركة النيابة باستعلام مباشر وآمن تماماً
             $movement = MedicalMovement::where('health_professional_id', $hp->id)->first();
-            if ($movement) {
-                $this->movement_specialty = $movement->specialty ?? '';
-                // إذا كانت مخزنة كنص عربي مسبقاً، نتركها كما هي، وإذا كانت تاريخاً نحولها لعرضها
-                $this->movement_date = $movement->movement_date ?? '';
-            }
+                if ($movement) {
+                    $this->movement_specialty = $movement->specialty ?? '';
+                    $this->movement_date = preg_match('/^\d{4}-\d{2}$/', $movement->movement_date)
+                        ? $movement->movement_date
+                        : '';
+                }
 
         }
 
@@ -206,90 +203,40 @@ class PostgraduateEdit extends Component
                 ]
             );
 
-         // معالجة تاريخ حركة النيابة لتحويله إلى نص عربي مثل (سبتمبر 2025)
-            $formattedMovementDate = $this->movement_date;
-
-            if (!empty($this->movement_date)) {
-                try {
-                    // إذا كان القادم من الحقل بصيغة تاريخ مثل 2025-09 أو 2025-09-01
-                    $formattedMovementDate = Carbon::parse($this->movement_date)->locale('ar')->translatedFormat('F Y');
-                } catch (\Exception $e) {
-                    // إذا كان مخزناً مصلحاً أو نصاً عادياً، اتركه كما هو
-                    $formattedMovementDate = $this->movement_date;
-                }
-            }
-
-            // تحديث أو إنشاء حركة النيابة
-            $movement = MedicalMovement::updateOrCreate(
+           MedicalMovement::updateOrCreate(
                 ['health_professional_id' => $hp->id],
                 [
                     'specialty' => $this->movement_specialty,
-                    'movement_date' => $formattedMovementDate, // سيحفظ كـ (سبتمبر 2025) مثلاً
+                    'movement_date' => $this->movement_date,
                 ]
             );
-
-            // وتحديثها في الكادر الطبي أيضاً إذا لزم الأمر
-            $hp->update([
-                'movement_specialty' => $this->movement_specialty,
-                'movement_date' => $formattedMovementDate,
-            ]);
         }
 
-
-
         // 3. تحديث جدول التخصص والقيد والتسجيل (postgraduate_registrations)
-
         $this->registration->update([
-
             'required_degree' => $this->required_degree,
-
             'required_specialty' => $this->required_specialty,
-
             'required_university' => $this->required_university,
-
             'sponsorship_type' => $this->sponsorship_type,
-
             'prior_registration_status' => $this->prior_registration_status,
-
             'prior_registration_study' => $this->prior_registration_study,
-
             'prior_registration_year' => $this->prior_registration_year,
-
             'cancellation_reason' => $this->cancellation_reason,
-
             'master_degree_date' => $this->master_degree_date,
             'degree_grade' => $this->degree_grade,
-
         ]);
 
-
-
         // إرسال رسالة نجاح وإعادة التوجيه إلى صفحة القائمة الرئيسية
-
         session()->flash('success', 'تم تعديل بيانات المرشح بنجاح.');
-
         return redirect()->route('postgraduate.candidates-list');
-
     }
-
-
-
     /**
-
      * دالة العرض (Render): تعرض ملف الابليد وتمرر له قائمة الجهات (Facilities)
-
      */
-
     public function render()
-
     {
-
         return view('livewire.postgraduate.postgraduate-edit', [
-
             'facilities' => Facility::all(),
-
         ])->layout('layouts.app', ['title' => 'تعديل بيانات مرشح دراسات عليا']);
-
     }
-
 }

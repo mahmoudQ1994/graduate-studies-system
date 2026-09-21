@@ -12,7 +12,7 @@ use App\Livewire\UserManagement\UserManager;
 use App\Livewire\Postgraduate\CandidateSearch;
 use App\Livewire\Postgraduate\CandidateRegister;
 use App\Livewire\Postgraduate\PostgraduateCandidatesList;
-use App\Livewire\Postgraduate\PostgraduateEdit; // تصحيح حرف L الكبير
+use App\Livewire\Postgraduate\PostgraduateEdit;
 use App\Livewire\Postgraduate\ManageStudyLeaves;
 use App\Livewire\Postgraduate\ManageStudyStatus;
 use App\Livewire\Postgraduate\ManageStudyPauses;
@@ -23,6 +23,10 @@ use App\Livewire\Reports\LeaveMovementReport;
 use App\Livewire\Reports\MedicalDegreesArchiveReport;
 use App\Livewire\Reports\StudyPausesReport;
 use App\Livewire\Reports\SemiAnnualCandidatesReport;
+use App\Livewire\Postgraduate\CreateTrainingSecondment;
+use App\Livewire\Postgraduate\TrainingSecondmentIndex;
+use App\Livewire\Postgraduate\PrintTrainingMemo;
+use App\Livewire\Reports\TrainingReport;
 
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
@@ -86,7 +90,7 @@ Route::middleware(['auth'])->group(function () {
         // مسار تعديل بيانات المرشح
         Route::get('/candidate-edit/{id}', PostgraduateEdit::class)->name('edit');
 
-        // مسار حفظ تعديل بيانات المرشح (مصحح لتجنب التكرار)
+        // مسار حفظ تعديل بيانات المرشح
         Route::get('/candidates', PostgraduateCandidatesList::class)->name('candidates');
 
         // مسار تعديل الدراسة للمرشح
@@ -94,6 +98,10 @@ Route::middleware(['auth'])->group(function () {
 
         // مسار تعديل واضافة اجازة تفرغ دراسى
         Route::get('/manage-study-leaves', ManageStudyLeaves::class)->name('leaves');
+        //مسار ادارة الافاد للتدريب
+        Route::get('/training-secondment', CreateTrainingSecondment::class)->name('training-secondment');
+        // مسار عرض قائمة الافاد للتدريب
+        Route::get('/training-secondment-index', TrainingSecondmentIndex::class)->name('training-secondment-index');
 
         // مسار إدارة إيقاف القيد
         Route::get('/study-pauses', ManageStudyPauses::class)->name('study-pauses');
@@ -101,7 +109,9 @@ Route::middleware(['auth'])->group(function () {
         // مسار طباعة الخطاب الرسمي
         Route::get('/official-letter-print', OfficialLetterPrint::class)->name('official-letter-print');
 
-        // مسار لوحة التحكم العامة
+        // مسار طباعة الافادة للتدريب
+        Route::get('/print-training-memo', PrintTrainingMemo::class)->name('print-training-memo');
+
         Route::get('/general-dashboard', GeneralDashboard::class)->name('general-dashboard');
 
         // مسار عرض تقرير اجازات التفرغ
@@ -113,6 +123,8 @@ Route::middleware(['auth'])->group(function () {
         // مسار عرض تقرير إيقاف القيد
         Route::get('/study-pauses-report', StudyPausesReport::class)->name('study-pauses-report');
 
+        //مسار عرض تقرير الافاد للتدريب
+        Route::get('/reports/training', TrainingReport::class)->name('reports.training');
         // مسار عرض تقرير المرشحين للنصف السنوي
         Route::get('/semi-annual-candidates-report', SemiAnnualCandidatesReport::class)->name('semi-annual-candidates-report');
 

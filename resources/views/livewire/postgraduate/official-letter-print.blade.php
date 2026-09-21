@@ -343,7 +343,6 @@
                                 <div class="text-first mb-2 fw-bold" style="font-size: 13px;">
                                     تحريراً في: {{ date('Y/m/d') }}م
                                 </div>
-
                                 <div>
                                     <div class="row text-center fw-bold mt-2 pt-2" style="font-size: 18px;">
                                         <div style="line-height: 1.5; font-size: 12px; text-first" class=" col-4 text-secondary mb-4">
@@ -353,7 +352,6 @@
                                         </div>
                                     </div>
                                 </div>
-
                                 <div class="row text-center fw-bold mt-2 pt-2" style="font-size: 18px;">
                                     <div class="col-6">
                                         <div class="mb-1">المشرف العام</div>

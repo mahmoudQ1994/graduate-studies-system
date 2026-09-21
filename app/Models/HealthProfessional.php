@@ -49,4 +49,10 @@ class HealthProfessional extends Model
     {
         return $this->hasMany(PostgraduateRegistration::class);
     }
+
+    //العلاقة مع جدول الاقاد للتدريب 
+    public function trainingSecondments()
+    {
+        return $this->hasMany(TrainingSecondment::class);
+    }
 }

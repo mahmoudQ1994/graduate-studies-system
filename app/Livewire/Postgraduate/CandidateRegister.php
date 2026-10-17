@@ -9,6 +9,10 @@ use App\Models\ProfessionalQualification;
 use App\Models\MedicalMovement;
 use App\Models\Facility;
 use App\Models\User;
+use App\Models\University;
+use App\Models\Specialty;
+
+
 
 class CandidateRegister extends Component
 {
@@ -43,6 +47,7 @@ class CandidateRegister extends Component
     // الدراسة المطلوبة والترشيح
     public $required_degree = 'دبلوم';
     public $required_specialty;
+
     public $required_university;
     public $sponsorship_type = 'وزاري';
     public $application_date;
@@ -146,16 +151,20 @@ class CandidateRegister extends Component
                     $this->prior_registration_year = date('Y', strtotime($latestReg->registration_date ?? $latestReg->created_at));
 
                     if ($latestReg->study_status === 'حصل على الدرجة' || $latestReg->nominated_degree_status === 'حصل على الدرجة') {
-                        $this->prior_study_outcome = 'تم الحصول عليها';
-                        $this->prior_degree_date = $latestReg->nominated_degree_date ?? $latestReg->degree_date ?? null;
+                            $this->prior_study_outcome = 'تم الحصول عليها';
+                            $rawPriorDate = $latestReg->nominated_degree_date ?? $latestReg->degree_date ?? $latestReg->master_degree_date;
+                            $this->prior_degree_date = $rawPriorDate ? date('Y-m-d', strtotime($rawPriorDate)) : null;
 
-                        // حفظ قيمة study_status القديمة (التي أصبحت 'حصل على الدرجة') في متغير سبب/موقف الإلغاء
                         $this->cancellation_reason = $latestReg->study_status;
 
                         // جلب بيانات الدبلوم أو المؤهل السابق لتعبئتها تلقائياً للماجستير
                         if ($latestReg->required_degree === 'دبلوم') {
                             $this->isMasterAutoFilled = true;
-                            $this->master_degree_date = $latestReg->nominated_degree_date ?? $latestReg->degree_date;
+
+                            // جلب وتنسيق تاريخ الحصول على الدرجة بالشكل القياسي Y-m-d
+                            $rawDate = $latestReg->nominated_degree_date ?? $latestReg->master_degree_date ?? $latestReg->degree_date;
+                            $this->master_degree_date = $rawDate ? date('Y-m-d', strtotime($rawDate)) : null;
+
                             $this->degree_grade = $latestReg->general_grade ?? $latestReg->degree_grade;
                         }
                     } else {
@@ -221,16 +230,26 @@ class CandidateRegister extends Component
                                 ->orWhere('nominated_degree_status', 'حصل على الدرجة');
                         })->latest()->first();
 
-                    if ($previousRecord) {
-                        $hasPreviousDegree = true;
-                        $this->isMasterAutoFilled = true;
-                        if (empty($this->master_degree_date)) {
-                            $this->master_degree_date = $previousRecord->nominated_degree_date ?? $previousRecord->degree_date ?? '';
+                        if ($previousRecord) {
+                            $hasPreviousDegree = true;
+                            $this->isMasterAutoFilled = true;
+
+                            if (empty($this->master_degree_date)) {
+                                // جلب التاريخ من الحقل الصحيح وتنسيقه بصيغة Y-m-d
+                                $rawDate = $previousRecord->nominated_degree_date
+                                    ?? $previousRecord->master_degree_date
+                                    ?? $previousRecord->degree_date
+                                    ?? '';
+
+                                $this->master_degree_date = !empty($rawDate) ? date('Y-m-d', strtotime($rawDate)) : '';
+                            }
+
+                            if (empty($this->degree_grade)) {
+                                $this->degree_grade = $previousRecord->general_grade
+                                    ?? $previousRecord->degree_grade
+                                    ?? '';
+                            }
                         }
-                        if (empty($this->degree_grade)) {
-                            $this->degree_grade = $previousRecord->general_grade ?? $previousRecord->degree_grade ?? '';
-                        }
-                    }
                 }
             }
 
@@ -317,7 +336,7 @@ class CandidateRegister extends Component
                 ]
             );
         }
-        
+
         if (in_array($this->profession, ['طبيب بشري', 'طبيب أسنان'])) {
             if (!empty($this->movement_specialty) || !empty($this->movement_date)) {
                 MedicalMovement::updateOrCreate(
@@ -363,6 +382,8 @@ class CandidateRegister extends Component
     {
         return view('livewire.postgraduate.candidate-register', [
             'facilities' => Facility::all(),
+            'universities' => University::where('is_active', true)->orderBy('name')->get(),
+            'qualificationsList' => Specialty::where('is_active', true)->orderBy('name')->get(),
         ])->layout('layouts.app');
     }
 }

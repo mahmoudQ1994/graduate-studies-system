@@ -1,11 +1,23 @@
 <div class="container-fluid py-3">
-    <!-- عنوان الصفحة وزر إضافة منشأة -->
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <!-- عنوان الصفحة وزر إضافة منشأة والاستيراد/التصدير -->
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
         <div>
             <h4 class="fw-bold mb-1"><i class="bi bi-hospital-fill text-primary me-2"></i>إدارة المستشفيات والجهات الصحية</h4>
             <p class="text-muted small mb-0">تكويد المستشفيات، المراكز الطبية، والوحدات الصحية وربطها بالمراكز والقطاعات</p>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            <!-- زر التصدير (Excel / CSV) -->
+            <button wire:click="export" class="btn btn-outline-success fw-bold btn-sm px-3 shadow-sm">
+                <i class="bi bi-file-earmark-excel me-1"></i> تصدير البيانات
+            </button>
+
+            <!-- زر الاستيراد -->
+            <label class="btn btn-outline-primary fw-bold btn-sm px-3 shadow-sm mb-0" style="cursor: pointer;">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i> استيراد ملف
+                <input type="file" wire:model="importFile" class="d-none" accept=".xlsx,.xls,.csv">
+            </label>
+
+            <!-- زر إضافة منشأة -->
             <button wire:click="toggleForm" class="btn btn-primary fw-bold btn-sm px-3 shadow-sm">
                 <i class="bi {{ $showForm ? 'bi-dash-lg' : 'bi-plus-lg' }} me-1"></i>
                 {{ $showForm ? 'إخفاء النموذج' : 'إضافة منشأة صحية' }}
@@ -13,10 +25,85 @@
         </div>
     </div>
 
+    @if($showPreviewModal)
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-eye-fill me-2"></i>معاينة بيانات الاستيراد وفحص التكرار
+                        </h5>
+                        <button type="button" wire:click="cancelImport" class="btn-close btn-close-white" aria-label="إغلاق"></button>
+                    </div>
+                    <div class="modal-body p-4">
+
+                        <!-- خيارات التكرار -->
+                        <div class="alert alert-warning d-flex align-items-center justify-content-between mb-3 py-2">
+                            <div>
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <span>تم العثور على منشآت باللون الأحمر (مكررة وموجودة مسبقاً بالنظام).</span>
+                            </div>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" wire:model="skipDuplicates" id="skipDupCheck">
+                                <label class="form-check-label small fw-bold" for="skipDupCheck">تخطي المنشآت المكررة تلقائياً</label>
+                            </div>
+                        </div>
+
+                        <!-- جدول المعاينة المصغر -->
+                        <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered align-middle mb-0">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>اسم المنشأة</th>
+                                        <th>النوع</th>
+                                        <th>المركز</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($previewData as $index => $row)
+                                        <tr class="{{ $row['is_duplicate'] ? 'table-danger' : 'table-success' }}">
+                                            <td>{{ $index + 1 }}</td>
+                                            <td class="fw-semibold">{{ $row['name'] }}</td>
+                                            <td>{{ $row['type'] }}</td>
+                                            <td>{{ $row['district'] }}</td>
+                                            <td>
+                                                @if($row['is_duplicate'])
+                                                    <span class="badge bg-danger">مكرر (موجود مسبقاً)</span>
+                                                @else
+                                                    <span class="badge bg-success">جديد</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" wire:click="cancelImport" class="btn btn-outline-secondary btn-sm px-3">إلغاء الأمر</button>
+                        <button type="button" wire:click="confirmImport" class="btn btn-primary btn-sm px-4 fw-bold">
+                            <i class="bi bi-check-circle me-1"></i> تأكيد وحفظ البيانات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- رسالة النجاح -->
+   <!-- رسالة النجاح أو الخطأ -->
     @if (session()->has('message'))
         <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3 mb-3" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> {{ session('message') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if (session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3 mb-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -42,17 +129,17 @@
                                 <div class="col-12 col-md-3">
                                     <label class="form-label fw-semibold small mb-1">نوع المنشأة <span class="text-danger">*</span></label>
                                    <select wire:model="type" class="form-select">
-                                        <option value="">-- اختر نوع الجهة --</option>
-                                        <option value="مستشفى عام">ديوان المديرية  </option>
+                                        <option value="ديوان المديرية">ديوان المديرية</option>
                                         <option value="مستشفى عام">مستشفى عام</option>
-                                        <option value="مستشفى مركزى">مستشفى مركزى</option>
-                                        <option value="مستشفى نوعى">مستشفى نوعى</option>
+                                        <option value="مستشفى مركزي">مستشفى مركزي</option>
+                                        <option value="مستشفى نوعي">مستشفى نوعي</option>
                                         <option value="إدارة صحية">إدارة صحية</option>
+                                        <option value="مركز طب أسرة">مركز طب أسرة</option>
                                         <option value="وحدة طب أسرة">وحدة طب أسرة</option>
                                     </select>
                                     @error('type') <div class="invalid-feedback small">{{ $message }}</div> @enderror
                                 </div>
-
+{{--  --}}
                                 <div class="col-12 col-md-2">
                                     <label class="form-label fw-semibold small mb-1">المركز / المدينة <span class="text-danger">*</span></label>
                                     <select wire:model="district_id" class="form-select form-select-sm @error('district_id') is-invalid @enderror">
@@ -101,12 +188,14 @@
 
                     <!-- الفلاتر والبحث -->
                     <div class="d-flex align-items-center gap-2">
-                        <select wire:model.live="filterType" class="form-select form-select-sm" style="width: 170px;">
-                            <option value="">جميع الأنواع</option>
-                            <option value="مستشفى">مستشفى</option>
-                            <option value="مركز طب أسرة">مركز طب أسرة</option>
-                            <option value="وحدة صحية">وحدة صحية</option>
+                        <select wire:model="type" class="form-select">
+                            <option value="ديوان المديرية">ديوان المديرية</option>
+                            <option value="مستشفى عام">مستشفى عام</option>
+                            <option value="مستشفى مركزي">مستشفى مركزي</option>
+                            <option value="مستشفى نوعي">مستشفى نوعي</option>
                             <option value="إدارة صحية">إدارة صحية</option>
+                            <option value="مركز طب أسرة">مركز طب أسرة</option>
+                            <option value="وحدة طب أسرة">وحدة طب أسرة</option>
                         </select>
                         <input type="text" wire:model.live="search" class="form-control form-control-sm" style="width: 200px;" placeholder="بحث باسم الجهة...">
                     </div>

@@ -132,21 +132,22 @@
                 </div>
                 <div class="card-body p-3">
                     <div class="row g-2">
-                        <div class="col-md-4"><label class="form-label small fw-bold mb-1">جامعة التخرج</label>
-                            <input type="text" wire:model="university" class="form-control form-control-sm">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold mb-1">جامعة التخرج</label>
+                            <select wire:model="university" class="form-select form-select-sm">
+                                <option value="">-- اختر جامعة التخرج --</option>
+                                @foreach($universities as $uni)
+                                    <option value="{{ $uni->name }}">{{ $uni->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold mb-1">المؤهل  </label>
+                            <label class="form-label small fw-bold mb-1">المؤهل</label>
                             <select wire:model="qualification" class="form-select form-select-sm">
                                 <option value="">-- اختر المؤهل --</option>
-                                <option value="بكتالوريوس الطب  والجراحة ">بكالوريوس الطب والجراحة </option>
-                                <option value="بكالوريوس طب وجراحة القم والاسنان ">بكالوريوس طب وجراحة القم والاسنان </option>
-                                <option value="بكالوريوس العلاج الطبيعى ">بكالوريوس العلاج الطبيعى </option>
-                                <option value="بكالوريوس الصيدلة ">بكالوريوس الصيدلة </option>
-                                <option value="بكالوريوس العلوم فى التمريض ">بكالوريوس العلوم فى التمريض </option>
-                                <option value="بكالوريوس العلوم ">بكالوريوس العلوم </option>
-                                <option value="بكالوريوس تكنولوجيا العلوم الصحية التطبيقية  ">بكالوريوس تكنولوجيا العلوم الصحية التطبيقية  </option>
-                                <option value="بكالوريوس الطب البيطرى  ">بكالوريوس الطب البيطرى  </option>
+                                @foreach($qualificationsList as $qual)
+                                    <option value="{{ $qual->name }}">{{ $qual->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-4"><label class="form-label small fw-bold mb-1">دفعة التخرج</label>
@@ -227,7 +228,15 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold small mb-1">الجامعة المطلوبة <span class="text-danger">*</span></label>
-                            <input type="text" wire:model="required_university" class="form-control form-control-sm">
+                            <select wire:model="required_university" class="form-select form-select-sm @error('required_university') is-invalid @enderror">
+                                <option value="">-- اختر الجامعة المطلوبة --</option>
+                                @foreach($universities as $uni)
+                                    <option value="{{ $uni->name }}">{{ $uni->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('required_university')
+                             <span class="text-danger extra-small">{{ $message }}</span>
+                              @enderror
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-bold small mb-1 text-primary">نوع الترشيح <span class="text-danger">*</span></label>

@@ -1,7 +1,7 @@
 <!-- السايدبار الأساسي للشاشات الكبيرة مع تثبيت الهيدر وتمرير الروابط -->
 <div class="sidebar d-none d-lg-flex flex-column p-3 text-white shadow" id="sidebarMenu" style="width: 260px; height: 100vh; background-color: #1e293b; position: sticky; top: 0;">
 
-    <!-- 1. الجزء الثابت بالأعلى (الهيدر: الشعار واسم المديرية) -->
+    <!-- الجزء الثابت بالأعلى (الهيدر: الشعار واسم المديرية) -->
     <div class="flex-shrink-0 d-flex align-items-center gap-2 pb-2 mb-2 border-bottom border-secondary border-opacity-50">
         <div class="flex-shrink-0">
             @if(isset($siteSetting) && $siteSetting->logo_path)
@@ -25,9 +25,9 @@
         </div>
     </div>
 
-    <!-- 2. الجزء الأوسط (قنوات الملاحة قابلة للتمرير Scrollable) -->
+    <!-- الجزء الأوسط (قنوات الملاحة قابلة للتمرير Scrollable مع ربط الأكورديون للإغلاق التلقائي) -->
     <div class="flex-grow-1 overflow-y-auto overflow-x-hidden pe-1 custom-scrollbar" style="font-size: 0.85rem;">
-        <ul class="nav nav-pills flex-column gap-1">
+        <ul class="nav nav-pills flex-column gap-1" id="sidebarAccordion">
 
             <!-- 1. الرئيسية -->
             <li class="nav-item">
@@ -40,10 +40,11 @@
             <!-- 2. الدراسات العليا -->
             <li class="nav-item">
                 <a class="nav-link py-1.5 px-2 text-white d-flex align-items-center justify-content-between {{ request()->routeIs('postgraduate.*') ? 'active bg-primary' : 'opacity-75' }}"
-                data-bs-toggle="collapse"
-                href="#postgraduateMenu"
-                role="button"
-                aria-expanded="{{ request()->routeIs('postgraduate.*') ? 'true' : 'false' }}">
+                   data-bs-toggle="collapse"
+                   data-bs-parent="#sidebarAccordion"
+                   href="#postgraduateMenu"
+                   role="button"
+                   aria-expanded="{{ request()->routeIs('postgraduate.*') ? 'true' : 'false' }}">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-mortarboard-fill fs-6"></i>
                         <span>إدارة الدراسات العليا</span>
@@ -51,7 +52,7 @@
                     <i class="bi bi-chevron-down extra-small"></i>
                 </a>
 
-                <div class="collapse {{ request()->routeIs('postgraduate.*') ? 'show' : '' }} ms-2 mt-1" id="postgraduateMenu" data-bs-parent="#sidebarMenu">
+                <div class="collapse {{ request()->routeIs('postgraduate.*') ? 'show' : '' }} ms-2 mt-1" id="postgraduateMenu" data-bs-parent="#sidebarAccordion">
                     <ul class="nav nav-pills flex-column gap-1 border-start border-secondary ps-2">
                         <li class="nav-item">
                             <a href="{{ route('postgraduate.search') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.search') ? 'active bg-primary text-white' : 'text-white opacity-75' }}" wire:navigate>
@@ -79,36 +80,38 @@
                             </a>
                         </li>
 
+                        <!-- قائمة فرعية داخلية (الإفاد للتدريب) -->
                         <li class="nav-item">
-                        <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between {{ request()->routeIs('postgraduate.*') ? '' : 'collapsed' }}"
-                        data-bs-toggle="collapse"
-                        href="#trainingSubMenu"
-                        role="button"
-                        aria-expanded="{{ request()->routeIs('postgraduate.*') ? 'true' : 'false' }}">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="bi bi-file-earmark-medical-fill fs-6"></i>
-                                <span>الإفاد للتدريب</span>
-                            </div>
-                            <i class="bi bi-chevron-down extra-small"></i>
-                        </a>
+                            <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between {{ request()->routeIs('postgraduate.training*') ? '' : 'collapsed' }}"
+                               data-bs-toggle="collapse"
+                               data-bs-parent="#postgraduateMenu"
+                               href="#trainingSubMenu"
+                               role="button"
+                               aria-expanded="{{ request()->routeIs('postgraduate.training*') ? 'true' : 'false' }}">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-file-earmark-medical-fill fs-6"></i>
+                                    <span>الإفاد للتدريب</span>
+                                </div>
+                                <i class="bi bi-chevron-down extra-small"></i>
+                            </a>
 
-                        <div class="collapse {{ request()->routeIs('postgraduate.*') ? 'show' : '' }} ms-2 mt-1" id="trainingSubMenu">
-                            <ul class="nav flex-column gap-1">
-                                <li class="nav-item">
-                                    <a href="{{ route('postgraduate.training-secondment') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.training-secondment') ? 'active text-white fw-bold bg-primary bg-opacity-25' : 'text-white opacity-75' }}">
-                                        <i class="bi bi-journal-plus fs-6 ms-1"></i>
-                                        <span>تسجيل إفاد للتدريب</span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('postgraduate.training-secondment-index') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.training-secondment-index') ? 'active text-white fw-bold bg-primary bg-opacity-25' : 'text-white opacity-75' }}">
-                                        <i class="bi bi-list-check fs-6 ms-1"></i>
-                                        <span>عرض الموفدين</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
+                            <div class="collapse {{ request()->routeIs('postgraduate.training*') ? 'show' : '' }} ms-2 mt-1" id="trainingSubMenu" data-bs-parent="#postgraduateMenu">
+                                <ul class="nav flex-column gap-1">
+                                    <li class="nav-item">
+                                        <a href="{{ route('postgraduate.training-secondment') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.training-secondment') ? 'active text-white fw-bold bg-primary bg-opacity-25' : 'text-white opacity-75' }}">
+                                            <i class="bi bi-journal-plus fs-6 ms-1"></i>
+                                            <span>تسجيل إفاد للتدريب</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('postgraduate.training-secondment-index') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.training-secondment-index') ? 'active text-white fw-bold bg-primary bg-opacity-25' : 'text-white opacity-75' }}">
+                                            <i class="bi bi-list-check fs-6 ms-1"></i>
+                                            <span>عرض الموفدين</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
 
                         <li class="nav-item">
                             <a href="{{ route('postgraduate.study-pauses') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.study-pauses') ? 'active bg-primary text-white' : 'text-white opacity-75' }}" wire:navigate>
@@ -119,23 +122,23 @@
                         <!-- النماذج والطباعة -->
                         <li class="nav-item">
                             <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
-                            data-bs-toggle="collapse"
-                            href="#printSubMenu"
-                            role="button"
-                            aria-expanded="false">
+                               data-bs-toggle="collapse"
+                               data-bs-parent="#postgraduateMenu"
+                               href="#printSubMenu"
+                               role="button"
+                               aria-expanded="false">
                                 <span><i class="bi bi-printer me-1"></i> النماذج والطباعة</span>
                                 <i class="bi bi-chevron-down extra-small"></i>
                             </a>
-                            <div class="collapse ms-2 mt-1" id="printSubMenu">
+                            <div class="collapse ms-2 mt-1" id="printSubMenu" data-bs-parent="#postgraduateMenu">
                                 <ul class="nav nav-pills flex-column gap-1 border-start border-secondary ps-2">
                                     <li>
                                         <a href="{{ route('postgraduate.official-letter-print') }}" class="nav-link py-1 px-2 small text-white opacity-75" wire:navigate>
                                             <i class="bi bi-file-earmark-text me-1"></i> كشف الترشيح للدراسة
                                         </a>
                                     </li>
-
                                     <li class="nav-item">
-                                        <a href="{{ route('postgraduate.print-training-memo') }}" class="nav-link {{ request()->routeIs('postgraduate.print-training-memo') ? 'active' : '' }}">
+                                        <a href="{{ route('postgraduate.print-training-memo') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('postgraduate.print-training-memo') ? 'active bg-primary text-white' : 'text-white opacity-75' }}">
                                             <i class="bi bi-file-earmark-text ms-2"></i>
                                             <span>مذكرة عرض الإفاد</span>
                                         </a>
@@ -147,14 +150,15 @@
                         <!-- التقارير والتحليلات -->
                         <li class="nav-item">
                             <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
-                            data-bs-toggle="collapse"
-                            href="#reportsSubMenu"
-                            role="button"
-                            aria-expanded="false">
+                               data-bs-toggle="collapse"
+                               data-bs-parent="#postgraduateMenu"
+                               href="#reportsSubMenu"
+                               role="button"
+                               aria-expanded="false">
                                 <span><i class="bi bi-graph-up-arrow me-1"></i> التقارير والتحليلات</span>
                                 <i class="bi bi-chevron-down extra-small"></i>
                             </a>
-                            <div class="collapse ms-2 mt-1" id="reportsSubMenu">
+                            <div class="collapse ms-2 mt-1" id="reportsSubMenu" data-bs-parent="#postgraduateMenu">
                                 <ul class="nav nav-pills flex-column gap-1 border-start border-secondary ps-2">
                                     <li>
                                         <a href="{{ route('postgraduate.general-dashboard') }}" class="nav-link py-1 px-2 small text-white opacity-75" wire:navigate>
@@ -163,21 +167,21 @@
                                     </li>
                                     <li>
                                         <a href="{{ route('postgraduate.leave-movement-report') }}" class="nav-link py-1 px-2 small text-white opacity-75" wire:navigate>
-                                            <i class="bi bi-calendar-range me-1"></i>   تقرير اجازات التفرغ
+                                            <i class="bi bi-calendar-range me-1"></i> تقرير اجازات التفرغ
                                         </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('postgraduate.medical-degrees-archive-report') }}" class="nav-link py-1 px-2 small text-white opacity-75" wire:navigate>
-                                            <i class="bi bi-award-fill me-1"></i>   تقرير ارشيف الحاصلين على الدرجات العلمية
+                                            <i class="bi bi-award-fill me-1"></i> تقرير ارشيف الحاصلين على الدرجات العلمية
                                         </a>
                                     </li>
                                     <li>
                                         <a href="{{ route('postgraduate.study-pauses-report') }}" class="nav-link py-1 px-2 small text-white opacity-75" wire:navigate>
-                                            <i class="bi bi-pause-circle me-1"></i>   تقرير متابعة حالات إيقاف القيد
+                                            <i class="bi bi-pause-circle me-1"></i> تقرير متابعة حالات إيقاف القيد
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a href="{{ route('postgraduate.reports.training') }}" class="nav-link {{ request()->routeIs('reports.training') ? 'active' : '' }}">
+                                        <a href="{{ route('postgraduate.reports.training') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('reports.training') ? 'active bg-primary text-white' : 'text-white opacity-75' }}">
                                             <i class="bi bi-file-earmark-text-fill me-2"></i>
                                             <span>تقرير الإفاد للتدريب</span>
                                         </a>
@@ -187,7 +191,6 @@
                                             <i class="bi bi-file-earmark-bar-graph me-1"></i> الإحصائية النصف سنوية للمرشحين
                                         </a>
                                     </li>
-
                                 </ul>
                             </div>
                         </li>
@@ -227,8 +230,9 @@
 
             <!-- 6. الإعدادات العامة -->
             <li class="nav-item">
-                <a class="nav-link py-1.5 px-2 text-white d-flex align-items-center justify-content-between {{ request()->routeIs('settings*') || request()->routeIs('departments*') ? 'active bg-primary' : 'opacity-75' }}"
+                <a class="nav-link py-1.5 px-2 text-white d-flex align-items-center justify-content-between {{ request()->routeIs('settings*') || request()->routeIs('departments*') || request()->routeIs('specialties*') ? 'active bg-primary' : 'opacity-75' }}"
                    data-bs-toggle="collapse"
+                   data-bs-parent="#sidebarAccordion"
                    href="#settingsCollapse"
                    role="button"
                    aria-expanded="false">
@@ -238,7 +242,7 @@
                     </div>
                     <i class="bi bi-chevron-down extra-small"></i>
                 </a>
-                <div class="collapse {{ request()->routeIs('settings*') || request()->routeIs('departments*') ? 'show' : '' }} ms-2 mt-1" id="settingsCollapse" data-bs-parent="#sidebarMenu">
+                <div class="collapse {{ request()->routeIs('settings*') || request()->routeIs('departments*') || request()->routeIs('specialties*') ? 'show' : '' }} ms-2 mt-1" id="settingsCollapse" data-bs-parent="#sidebarAccordion">
                     <ul class="nav nav-pills flex-column gap-1 border-start border-secondary ps-2">
                         <li>
                             <a href="{{ route('site-settings') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('site-settings') ? 'active bg-primary text-white' : 'text-white opacity-75' }}">
@@ -250,24 +254,31 @@
                                 <i class="bi bi-diagram-3 me-1"></i> أقسام الإدارة
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ route('specialties') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('specialties') ? 'active bg-primary text-white' : 'text-white opacity-75' }}">
+                                <i class="bi bi-briefcase me-1"></i>
+                                <span> التخصصات الوظيفية</span>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </li>
 
             <!-- 7. تكويد الهيكل والإدارات -->
             <li class="nav-item">
-                <a class="nav-link py-1.5 px-2 text-white d-flex align-items-center justify-content-between {{ request()->routeIs('districts*') || request()->routeIs('sectors*') || request()->routeIs('facilities*') ? 'active bg-primary' : 'opacity-75' }}"
+                <a class="nav-link py-1.5 px-2 text-white d-flex align-items-center justify-content-between {{ request()->routeIs('districts*') || request()->routeIs('sectors*') || request()->routeIs('hospitals*') ? 'active bg-primary' : 'opacity-75' }}"
                    data-bs-toggle="collapse"
+                   data-bs-parent="#sidebarAccordion"
                    href="#codingSubmenu"
                    role="button"
                    aria-expanded="false">
-                    <div class="v-flex d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-gear-wide-connected fs-6"></i>
                         <span>تكويد المراكز والإدارات</span>
                     </div>
                     <i class="bi bi-chevron-down extra-small"></i>
                 </a>
-                <div class="collapse {{ request()->routeIs('districts*') || request()->routeIs('sectors*') || request()->routeIs('facilities*') ? 'show' : '' }} ms-2 mt-1" id="codingSubmenu" data-bs-parent="#sidebarMenu">
+                <div class="collapse {{ request()->routeIs('districts*') || request()->routeIs('sectors*') || request()->routeIs('hospitals*') ? 'show' : '' }} ms-2 mt-1" id="codingSubmenu" data-bs-parent="#sidebarAccordion">
                     <ul class="nav nav-pills flex-column gap-1 border-start border-secondary ps-2">
                         <li>
                             <a href="{{ route('districts.index') }}" class="nav-link py-1 px-2 small {{ request()->routeIs('districts*') ? 'active bg-primary text-white' : 'text-white opacity-75' }}">
@@ -288,8 +299,14 @@
                 </div>
             </li>
 
+            <!-- 8. تكويد الجامعات والكليات -->
+            <li class="nav-item">
+                <a href="{{ route('universities.index') }}" class="nav-link py-1.5 px-2 text-white d-flex align-items-center gap-2 {{ request()->routeIs('universities.*') ? 'active bg-primary' : 'opacity-75' }}">
+                    <i class="bi bi-building fs-6"></i>
+                    <span>تكويد الجامعات والكليات</span>
+                </a>
+            </li>
+
         </ul>
     </div>
-
-
 </div>

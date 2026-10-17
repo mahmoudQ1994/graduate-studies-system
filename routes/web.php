@@ -27,6 +27,9 @@ use App\Livewire\Postgraduate\CreateTrainingSecondment;
 use App\Livewire\Postgraduate\TrainingSecondmentIndex;
 use App\Livewire\Postgraduate\PrintTrainingMemo;
 use App\Livewire\Reports\TrainingReport;
+use App\Livewire\Structure\UniversityManager;
+use App\Livewire\Structure\CollegeManager;
+use App\Livewire\Settings\SpecialtyManager;
 
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
@@ -51,6 +54,8 @@ Route::middleware(['auth'])->group(function () {
     // الإعدادات العامة للموقع
     Route::get('/settings/site', SiteSetting::class)->name('site-settings');
     Route::get('/settings/departments', DepartmentManager::class)->name('departments');
+    // مسار إدارة المواهلات الوظيفية
+    Route::get('/settings/specialties', SpecialtyManager::class)->name('specialties');
 
     // مسار إدارة المراكز والمدن
     Route::get('/districts', DistrictManager::class)->name('districts.index');
@@ -69,6 +74,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/hospitals/create', HospitalManager::class)->name('hospitals.create');
     Route::get('/hospitals/{hospital}/edit', HospitalManager::class)->name('hospitals.edit');
     Route::get('/hospitals/{hospital}/delete', HospitalManager::class)->name('hospitals.delete');
+
+    // مسار إدارة الجامعات
+    Route::get('/universities', UniversityManager::class)->name('universities.index');
+    route::get('/universities/create', UniversityManager::class)->name('universities.create');
+    route::get('/universities/{university}/edit', UniversityManager::class)->name('universities.edit');
+    route::get('/universities/{university}/delete', UniversityManager::class)->name('universities.delete');
+    route::get('/universities/export', UniversityManager::class)->name('universities.export');
+
+    // مسار إدارة الكليات
+    Route::get('/colleges', CollegeManager::class)->name('colleges.index');
+    route::get('/colleges/create', CollegeManager::class)->name('colleges.create');
+    route::get('/colleges/{college}/edit', CollegeManager::class)->name('colleges.edit');
+    route::get('/colleges/{college}/delete', CollegeManager::class)->name('colleges.delete');
+    route::get('/colleges/export', CollegeManager::class)->name('colleges.export');
 
     // مسار إدارة المستخدمين
     Route::get('/users', UserManager::class)->name('users.index');

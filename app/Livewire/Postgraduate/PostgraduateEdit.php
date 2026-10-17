@@ -7,6 +7,8 @@ use App\Models\HealthProfessional;
 use App\Models\Facility;
 use App\Models\ProfessionalQualification;
 use App\Models\MedicalMovement;
+use App\Models\University;
+use App\Models\Specialty;
 
 class PostgraduateEdit extends Component
 
@@ -50,7 +52,6 @@ class PostgraduateEdit extends Component
     public $required_specialty;
 
     public $required_university;
-
     public $sponsorship_type; // نوع الترشيح (مثل: وزاري)
 
     public $application_date;
@@ -237,6 +238,8 @@ class PostgraduateEdit extends Component
     {
         return view('livewire.postgraduate.postgraduate-edit', [
             'facilities' => Facility::all(),
+            'universities' => University::where('is_active', true)->orderBy('name')->get(),
+            'qualificationsList' => Specialty::where('is_active', true)->orderBy('name')->get(),
         ])->layout('layouts.app', ['title' => 'تعديل بيانات مرشح دراسات عليا']);
     }
 }

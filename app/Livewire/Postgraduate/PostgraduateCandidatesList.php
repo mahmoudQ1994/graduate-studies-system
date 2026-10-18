@@ -29,6 +29,25 @@ class PostgraduateCandidatesList extends Component
         $this->resetPage();
     }
 
+    public function deleteCandidate($id)
+    {
+        try {
+            $registration = PostgraduateRegistration::find($id);
+
+            if ($registration) {
+                // يمكنك اختيار ما إذا كنت تريد حذف سجل التسجيل فقط أو حذف الممارس الصحي المرتبط به بالكامل
+                // $registration->healthProfessional()?->delete(); // إذا أردت حذف الكادر الطبي السجل بالكامل
+                $registration->delete(); // حذف طلب التسجيل الحالي
+
+                session()->flash('success', 'تم حذف بيانات المرشح بنجاح.');
+            } else {
+                session()->flash('error', 'عذراً، لم يتم العثور على بيانات المرشح المطلوب.');
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', 'فشلت عملية الحذف لوجود بيانات مرتبطة بهذا السجل.');
+        }
+    }
+
     public function render()
     {
         // جلب البيانات مع ربط جدول الكادر الطبي جهة العمل

@@ -30,6 +30,8 @@ use App\Livewire\Reports\TrainingReport;
 use App\Livewire\Structure\UniversityManager;
 use App\Livewire\Structure\CollegeManager;
 use App\Livewire\Settings\SpecialtyManager;
+use App\Livewire\Dashboard;
+use App\Livewire\UserProfile;
 
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
@@ -47,9 +49,9 @@ Route::post('/logout', function () {
 // المسارات المحمية (تتطلب تسجيل الدخول)
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', Dashboard::class)->name('dashboard');
+
+    Route::get('/profile', UserProfile::class)->name('profile');
 
     // الإعدادات العامة للموقع
     Route::get('/settings/site', SiteSetting::class)->name('site-settings');
@@ -77,10 +79,10 @@ Route::middleware(['auth'])->group(function () {
 
     // مسار إدارة الجامعات
     Route::get('/universities', UniversityManager::class)->name('universities.index');
-    route::get('/universities/create', UniversityManager::class)->name('universities.create');
-    route::get('/universities/{university}/edit', UniversityManager::class)->name('universities.edit');
-    route::get('/universities/{university}/delete', UniversityManager::class)->name('universities.delete');
-    route::get('/universities/export', UniversityManager::class)->name('universities.export');
+    Route::get('/universities/create', UniversityManager::class)->name('universities.create');
+    Route::get('/universities/{university}/edit', UniversityManager::class)->name('universities.edit');
+    Route::get('/universities/{university}/delete', UniversityManager::class)->name('universities.delete');
+    Route::get('/universities/export', UniversityManager::class)->name('universities.export');
 
     // مسار إدارة الكليات
     Route::get('/colleges', CollegeManager::class)->name('colleges.index');

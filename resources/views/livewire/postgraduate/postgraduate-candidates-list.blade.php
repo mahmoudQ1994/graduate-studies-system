@@ -105,7 +105,11 @@
                                         <a href="{{ route('postgraduate.edit', $candidate->id) }}" class="btn btn-outline-primary py-1 px-2" title="تعديل">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
-                                        <button wire:click="deleteCandidate({{ $candidate->id }})" class="btn btn-outline-danger py-1 px-2" title="حذف">
+                                        <button type="button"
+                                                onclick="if(confirm('هل أنت متأكد من رغبتك في حذف هذا المرشح؟ لا يمكن التراجع عن هذا الإجراء.'))
+                                                 { @this.call('deleteCandidate', {{ $candidate->id }}); }"
+                                                class="btn btn-outline-danger py-1 px-2"
+                                                title="حذف">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </div>

@@ -28,7 +28,7 @@ class Dashboard extends Component
 
             // توزيع الحالات الدراسية بدقة حسب المسميات المعتمدة
             'status_pending' => PostgraduateRegistration::where('study_status', 'جاري فحص الطلب')->count(),
-            'status_ongoing' => PostgraduateRegistration::where('study_status', 'مستمر بالدراسة')->count(),
+            'status_ongoing' => PostgraduateRegistration::where('study_status', 'مستمر')->count(),
             'status_graduated' => PostgraduateRegistration::where('study_status', 'حصل على الدرجة')->count(),
             'status_apology' => PostgraduateRegistration::where('study_status', 'اعتذار عن الدراسة')->count(),
             'status_rejected' => PostgraduateRegistration::where('study_status', 'عدم القبول بالدراسة')->count(),

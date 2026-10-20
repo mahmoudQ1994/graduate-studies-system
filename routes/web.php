@@ -32,7 +32,21 @@ use App\Livewire\Structure\CollegeManager;
 use App\Livewire\Settings\SpecialtyManager;
 use App\Livewire\Dashboard;
 use App\Livewire\UserProfile;
-
+use App\Livewire\Training\ProgramTypesManager;
+use App\Livewire\Training\HallsManager;
+use App\Livewire\Training\MethodsManager;
+use App\Livewire\Training\KnowledgeManager;
+use App\Livewire\Training\ImpactManager;
+use App\Livewire\Training\RejectionReasonsManager;
+use App\Livewire\Training\HourlyRatesManager;
+use App\Livewire\Training\JobStatusesManager;
+use App\Livewire\Training\SpecializationsManager;
+use App\Livewire\Training\JobGradesManager;
+use App\Livewire\Training\TrainingProgramManager;
+use App\Livewire\Training\TrainingApprovalManager;
+use App\Livewire\Training\TrainingScheduleManager;
+use App\Livewire\Training\TrainerManager;
+use App\Livewire\Training\TrainerApprovalManager;
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
     return redirect()->route('login');
@@ -153,6 +167,40 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/import-export', ImportExport::class)->name('import-export');
 
         Route::view('profile', 'profile')->name('profile');
+    });
+
+    //مسارات قسم التدريب
+    Route::prefix('training')->name('training.')->group(function () {
+        // مسار إدارة أنواع البرامج التدريبية
+        Route::get('/program-types', ProgramTypesManager::class)->name('program-types');
+        // مسار إدارة قاعات التدريب
+        Route::get('/halls', HallsManager::class)->name('halls');
+        // مسار إدارة أساليب التدريب
+        Route::get('/methods', MethodsManager::class)->name('methods');
+        // مسار إدارة قياسات المعرفة
+        Route::get('/knowledge-measurements', KnowledgeManager::class)->name('knowledge-measurements');
+        // مسار إدارة قياسات الأثر
+        Route::get('/impact-measurements', ImpactManager::class)->name('impact-measurements');
+        // مسار إدارة أسباب الرفض
+        Route::get('/rejection-reasons', RejectionReasonsManager::class)->name('rejection-reasons');
+        // مسار إدارة معدلات الساعات التدريبية
+        Route::get('/hourly-rates', HourlyRatesManager::class)->name('hourly-rates');
+        // مسار إدارة الحالات الوظيفية
+        Route::get('/job-statuses', JobStatusesManager::class)->name('job-statuses');
+        // مسار إدارة التخصصات الفنية
+        Route::get('/specializations', SpecializationsManager::class)->name('specializations');
+        // مسار إدارة الدرجات الوظيفية
+        Route::get('/job-grades', JobGradesManager::class)->name('job-grades');
+        // مسار إدارة البرامج التدريبية
+        Route::get('/programs', TrainingProgramManager::class)->name('programs');
+        // مسار إدارة الاعتمادات والموافقات للبرامج التدريبية
+        Route::get('/programs/approvals', TrainingApprovalManager::class)->name('programs.approvals');
+        //مسار ادارة تنشيط البرامج
+        Route::get('/programs/schedules', TrainingScheduleManager::class)->name('programs.schedules');
+        // مسار انشاء المدربين
+        Route::get('/trainers', TrainerManager::class)->name('trainers');
+        // مسار إدارة الاعتمادات ومتابعة السجل التدقيقي للمدربين
+        Route::get('/trainers/approvals', TrainerApprovalManager::class)->name('trainers.approvals');
     });
 
 });

@@ -219,6 +219,181 @@
                     <span>التكليف والامتياز</span>
                 </a>
             </li>
+            <!-- قسم إدارة التدريب الرئيسي -->
+            <li class="nav-item">
+                <a class="nav-link py-1.5 px-2 text-white d-flex align-items-center justify-content-between opacity-75"
+                data-bs-toggle="collapse"
+                data-bs-parent="#sidebarAccordion"
+                href="#trainingDepartmentMenu"
+                role="button"
+                aria-expanded="true">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard fs-6"></i>
+                        <span>إدارة التدريب</span>
+                    </div>
+                    <i class="bi bi-chevron-down extra-small"></i>
+                </a>
+
+                <div class="collapse show ms-2 mt-1" id="trainingDepartmentMenu" data-bs-parent="#sidebarAccordion">
+                    <ul class="nav nav-pills flex-column gap-1 border-start border-secondary ps-2">
+
+                        <!-- القائمة المنسدلة الفرعية: البرامج التدريبية (وتضم النوافذ الثلاث) -->
+                        <li class="nav-item">
+                            <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
+                            data-bs-toggle="collapse"
+                            data-bs-parent="#trainingDepartmentMenu"
+                            href="#trainingProgramsSubMenu"
+                            role="button"
+                            aria-expanded="false">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-journal-text fs-6"></i>
+                                    <span>البرامج التدريبية</span>
+                                </div>
+                                <i class="bi bi-chevron-down extra-small"></i>
+                            </a>
+
+                            <div class="collapse ms-2 mt-1" id="trainingProgramsSubMenu" data-bs-parent="#trainingDepartmentMenu">
+                                <ul class="nav flex-column gap-1 border-start border-secondary ps-2">
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.programs') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-journal-plus me-1"></i> إنشاء البرنامج التدريبي
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.programs.approvals') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-check2-square me-1"></i> الاعتمادات والموافقات
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.programs.schedules') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-calendar-check me-1"></i> الجدولة والتنشيط
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- 2. قائمة المحاضرين  -->
+                        <li class="nav-item">
+                            <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
+                            data-bs-toggle="collapse"
+                            data-bs-parent="#trainingDepartmentMenu"
+                            href="#trainersSubMenu"
+                            role="button"
+                            aria-expanded="false">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-video3 fs-6"></i>
+                                    <span>المحاضرون</span>
+                                </div>
+                                <i class="bi bi-chevron-down extra-small"></i>
+                            </a>
+                            <div class="collapse ms-2 mt-1" id="trainersSubMenu" data-bs-parent="#trainingDepartmentMenu">
+                                <ul class="nav flex-column gap-1 border-start border-secondary ps-2">
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.trainers') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-people me-1"></i> أضافة المحاضرين
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.trainers.approvals') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-shield-check me-1"></i>  اعتماد المحاضرين
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-calendar-event me-1"></i> جدول ومواعيد المحاضرين
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-star me-1"></i> تقييمات الأداء
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                        <!-- إدخال بيانات متدربين -->
+                        <li class="nav-item">
+                            <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
+                                <i class="bi bi-person-plus me-1"></i> إدخال بيانات متدربين
+                            </a>
+                        </li>
+
+                        <!-- قسم الإعدادات (تحت إدارة التدريب مباشرة) -->
+                        <li class="nav-item mt-1">
+                            <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
+                            data-bs-toggle="collapse"
+                            data-bs-parent="#trainingDepartmentMenu"
+                            href="#trainingSettingsSubMenu"
+                            role="button"
+                            aria-expanded="false">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-gear-fill fs-6"></i>
+                                    <span>الإعدادات</span>
+                                </div>
+                                <i class="bi bi-chevron-down extra-small"></i>
+                            </a>
+
+                            <div class="collapse ms-2 mt-1" id="trainingSettingsSubMenu" data-bs-parent="#trainingDepartmentMenu">
+                                <ul class="nav flex-column gap-1 border-start border-secondary ps-2">
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.program-types') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-list-task me-1"></i> إدخال نوع البرامج التدريبية
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.halls') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-building me-1"></i> تكويد قاعات التدريب
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.methods') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-sliders me-1"></i> إدخال أسلوب التدريب
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.knowledge-measurements') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-check2-circle me-1"></i> قياس المعرفة المكتسبة
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.impact-measurements') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-graph-up me-1"></i> قياس أثر التدريب
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.rejection-reasons') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-x-circle me-1"></i> سبب رفض البرامج التدريبية
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.hourly-rates') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-clock me-1"></i> معدل ساعات التدريب
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.job-statuses') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-person-badge me-1"></i> الحالة الوظيفية
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.specializations') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-tools me-1"></i> التخصص الفني
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.job-grades') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-award me-1"></i> الدرجات الوظيفية
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
+                    </ul>
+                </div>
+            </li>
 
             <!-- 5. المستخدمين والصلاحيات -->
             <li class="nav-item">

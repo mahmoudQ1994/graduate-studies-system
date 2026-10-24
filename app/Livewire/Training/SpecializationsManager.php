@@ -124,7 +124,7 @@ class SpecializationsManager extends Component
                       ->orWhere('description', 'like', '%' . $this->search . '%');
             })
             ->latest()
-            ->paginate(10);
+            ->paginate(4);
 
         return view('livewire.training.specializations-manager', [
             'specializations' => $specializations,

@@ -2,10 +2,17 @@
     <div class="row justify-content-center">
         <div class="col-md-12">
 
-            <!-- رسائل النجاح والتنبيهات -->
+            <!-- رسائل النجاح والتنبيهات العامة -->
             @if (session()->has('success'))
                 <div class="alert alert-success alert-dismissible fade show text-end shadow-sm border-0 py-2 small" role="alert">
                     <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+                    <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if (session()->has('error'))
+                <div class="alert alert-danger alert-dismissible fade show text-end shadow-sm border-0 py-2 small" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                     <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
@@ -15,7 +22,7 @@
                     <h6 class="mb-0 fw-bold fs-6">
                         <i class="bi bi-person-plus-fill me-1"></i> إضافة مدرب / استشاري جديد
                     </h6>
-                    <a href="{{ route('training.trainers') }}" class="btn btn-light btn-sm text-primary fw-bold px-2 py-1 shadow-sm" style="font-size: 0.8rem;">
+                    <a href="{{ route('training.trainers.list') }}" class="btn btn-light btn-sm text-primary fw-bold px-2 py-1 shadow-sm" style="font-size: 0.8rem;">
                         <i class="bi bi-arrow-right me-1"></i> العودة لقائمة المدربين
                     </a>
                 </div>
@@ -27,7 +34,7 @@
                         <ul class="nav nav-pills nav-fill mb-3 bg-white p-1 rounded-2 shadow-sm border" id="trainerTabs" role="tablist" style="font-size: 0.85rem;">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active fw-bold py-1.5 px-2 rounded-2" id="basic-tab" data-bs-toggle="tab" data-bs-target="#basic" type="button" role="tab">
-                                    <i class="bi bi-person-badge me-1"></i> 1. البيانات الأساسية
+                                    <i class="bi bi-person-badge me-1"></i>1. البيانات الأساسية
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -54,7 +61,7 @@
 
                         <div class="tab-content bg-white p-3 rounded-3 shadow-sm border" id="trainerTabsContent">
 
-                            <!-- 1. تبويب البيانات الأساسية -->
+                            <!-- تبويب البيانات الأساسية -->
                             <div class="tab-pane fade show active" id="basic" role="tabpanel" aria-labelledby="basic-tab">
                                 <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
                                     <div class="bg-primary bg-opacity-10 p-1.5 rounded-circle text-primary me-2">
@@ -86,18 +93,32 @@
                                         @error('name_en') <span class="text-danger" style="font-size: 0.75rem;">{{ $message }}</span> @enderror
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <!-- حقل الرقم القومي مع التنبيه الفوري -->
+                                    <div class="col-md-12">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">الرقم القومي (14 رقم) <span class="text-danger">*</span></label>
-                                        <input type="text" wire:model.live.debounce.300ms="national_id" maxlength="14" class="form-control form-control-sm shadow-none" placeholder="أدخل 14 رقماً للاستنتاج التلقائي">
+                                        <input type="text" wire:model.live.debounce.300ms="national_id" maxlength="14" class="form-control form-control-sm shadow-none" placeholder="أدخل 14 رقماً للاستنتاج التلقائي والتحقق من التسجيل">
                                         @error('national_id') <span class="text-danger" style="font-size: 0.75rem;">{{ $message }}</span> @enderror
+
+                                        <!-- صندوق تنبيه موقف المدرب إذا كان مسجلاً مسبقاً -->
+                                        @if($nationalIdMessage)
+                                            <div class="mt-2 p-2.5 bg-warning bg-opacity-10 border-start border-4 border-warning text-warning-emphasis rounded shadow-sm d-flex align-items-center justify-content-between" style="font-size: 0.83rem;">
+                                                <div>
+                                                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                                    <span class="fw-bold">{{ $nationalIdMessage }}</span>
+                                                </div>
+                                                @if($existingTrainer)
+                                                    <span class="badge bg-secondary">موقف سابق</span>
+                                                @endif
+                                            </div>
+                                        @endif
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">تاريخ الميلاد (تلقائي)</label>
                                         <input type="date" wire:model="birth_date" class="form-control form-control-sm bg-light shadow-none" readonly>
                                     </div>
 
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">النوع (تلقائي)</label>
                                         <select wire:model="gender" class="form-select form-select-sm bg-light shadow-none" disabled>
                                             <option value="">-- يحدد تلقائياً --</option>
@@ -131,7 +152,6 @@
                                 </div>
 
                                 <div class="row g-2">
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">المؤهل العلمي الأساسي</label>
                                         <select wire:model="academic_qualification" class="form-select form-select-sm shadow-none">
@@ -140,14 +160,11 @@
                                                 <option value="{{ $spec->name }}">{{ $spec->name }}</option>
                                             @endforeach
                                         </select>
-                                        @error('academic_qualification') <span class="text-danger" style="font-size: 0.75rem;">{{ $message }}</span> @enderror
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">سنة الحصول على المؤهل</label>
                                         <input type="number" wire:model="qualification_year" class="form-control form-control-sm shadow-none" placeholder="مثال: 2015">
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">الجامعة أو المعهد</label>
                                         <select wire:model="university_or_institute" class="form-select form-select-sm shadow-none">
@@ -156,24 +173,19 @@
                                                 <option value="{{ $uni->name }}">{{ $uni->name }} ({{ $uni->type }})</option>
                                             @endforeach
                                         </select>
-                                        @error('university_or_institute') <span class="text-danger" style="font-size: 0.75rem;">{{ $message }}</span> @enderror
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">الوظيفة الحالية</label>
                                         <input type="text" wire:model="current_job" class="form-control form-control-sm shadow-none" placeholder="المسمى الوظيفي الحالي">
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">جهة العمل</label>
                                         <input type="text" wire:model="workplace" class="form-control form-control-sm shadow-none" placeholder="اسم المستشفى أو المؤسسة">
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">محافظة جهة العمل</label>
-                                        <input type="text" wire:model="workplace_governorate" class="form-control form-control-sm shadow-none" placeholder="مثال: سوهاج، القاهرة">
+                                        <input type="text" wire:model="workplace_governorate" class="form-control form-control-sm shadow-none" placeholder="مثال: سوهاج">
                                     </div>
-
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">الدرجة الوظيفية</label>
                                         <select wire:model.live="job_grade_id" class="form-select form-select-sm shadow-none">
@@ -183,7 +195,6 @@
                                             @endforeach
                                         </select>
                                     </div>
-
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">الحالة الوظيفية</label>
                                         <select wire:model="job_status_id" class="form-select form-select-sm shadow-none">
@@ -193,7 +204,6 @@
                                             @endforeach
                                         </select>
                                     </div>
-
                                 </div>
                             </div>
 
@@ -207,7 +217,6 @@
                                 </div>
 
                                 <div class="row g-2">
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">التخصص الفني</label>
                                         <select wire:model="specialization_id" class="form-select form-select-sm shadow-none">
@@ -217,29 +226,24 @@
                                             @endforeach
                                         </select>
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">الدراسات العليا في التخصص</label>
-                                        <input type="text" wire:model="postgraduate_specialization" class="form-control form-control-sm shadow-none" placeholder="دكتوراه / زمالة / ماجستير">
+                                        <input type="text" wire:model="postgraduate_specialization" class="form-control form-control-sm shadow-none" placeholder="دكتوراه / ماجستير">
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">سنة الحصول عليها</label>
-                                        <input type="number" wire:model="postgraduate_specialization_year" class="form-control form-control-sm shadow-none" placeholder="مثال: 2020">
+                                        <input type="number" wire:model="postgraduate_specialization_year" class="form-control form-control-sm shadow-none">
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">سنوات الخبرة بالتخصص</label>
                                         <input type="number" wire:model="specialization_experience_years" class="form-control form-control-sm shadow-none" min="0">
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">الدراسات العليا الإدارية</label>
-                                        <input type="text" wire:model="administrative_postgraduates" class="form-control form-control-sm shadow-none" placeholder="مثال: MBA, إدارة مستشفيات">
+                                        <input type="text" wire:model="administrative_postgraduates" class="form-control form-control-sm shadow-none">
                                     </div>
-
                                     <div class="col-md-4">
-                                        <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">مستوى إجادة اللغة الإنجليزية</label>
+                                        <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">مستوى اللغة الإنجليزية</label>
                                         <select wire:model="english_proficiency_level" class="form-select form-select-sm shadow-none">
                                             <option value="">-- اختر المستوى --</option>
                                             <option value="ممتاز">ممتاز</option>
@@ -248,23 +252,20 @@
                                             <option value="مقبول">مقبول</option>
                                         </select>
                                     </div>
-
                                     <div class="col-md-4">
                                         <label class="form-label fw-semibold text-success mb-1" style="font-size: 0.82rem;">مكافأة السعة التدريبية (تلقائي)</label>
                                         <input type="number" step="0.01" wire:model="capacity_reward_amount" class="form-control form-control-sm bg-light fw-bold text-success shadow-none">
                                     </div>
-
                                     <div class="col-md-12 mt-3 p-3 border rounded-3 bg-light shadow-sm">
                                         <div class="form-check form-switch mb-2">
-                                            <input class="form-check-input" type="checkbox" wire:model.live="has_tot_certificate" id="totCheck" style="transform: scale(1.1); margin-left: 8px;">
+                                            <input class="form-check-input" type="checkbox" wire:model.live="has_tot_certificate" id="totCheck">
                                             <label class="form-check-label fw-bold text-dark" for="totCheck" style="font-size: 0.85rem;">حاصل على برنامج إعداد مدربين (TOT)؟</label>
                                         </div>
-
                                         @if($has_tot_certificate)
                                             <div class="row g-2 mt-1 pt-2 border-top">
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.8rem;">جهة الحصول على البرنامج</label>
-                                                    <input type="text" wire:model="tot_provider" class="form-control form-control-sm bg-white shadow-none" placeholder="اسم الجهة المانحة لشهادة TOT">
+                                                    <input type="text" wire:model="tot_provider" class="form-control form-control-sm bg-white shadow-none">
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.8rem;">تاريخ الحصول على الشهادة</label>
@@ -273,7 +274,6 @@
                                             </div>
                                         @endif
                                     </div>
-
                                 </div>
                             </div>
 
@@ -290,7 +290,6 @@
                                         <i class="bi bi-plus-circle me-1"></i> إضافة صف جديد
                                     </button>
                                 </div>
-
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover align-middle shadow-sm mb-0" style="font-size: 0.85rem;">
                                         <thead class="table-light text-center">
@@ -343,51 +342,45 @@
                                     </div>
                                     <h6 class="text-primary fw-bold mb-0" style="font-size: 0.95rem;">رفع المستندات والمرفقات الرسمية (PDF أو صور)</h6>
                                 </div>
-
                                 <div class="row g-3">
-
                                     <div class="col-md-6">
                                         <div class="p-2.5 border rounded-3 bg-light shadow-sm">
                                             <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">صورة الرقم القومي (الوجه الأمامي)</label>
                                             <input type="file" wire:model="national_id_front" class="form-control form-control-sm shadow-none">
-                                            <div wire:loading wire:target="national_id_front" class="text-primary mt-1" style="font-size: 0.75rem;">جاري رفع الملف...</div>
                                         </div>
                                     </div>
-
                                     <div class="col-md-6">
                                         <div class="p-2.5 border rounded-3 bg-light shadow-sm">
                                             <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">صورة الرقم القومي (الوجه الخلفي)</label>
                                             <input type="file" wire:model="national_id_back" class="form-control form-control-sm shadow-none">
-                                            <div wire:loading wire:target="national_id_back" class="text-primary mt-1" style="font-size: 0.75rem;">جاري رفع الملف...</div>
                                         </div>
                                     </div>
-
                                     <div class="col-md-6">
                                         <div class="p-2.5 border rounded-3 bg-light shadow-sm">
                                             <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">صورة بيان الحالة الوظيفية</label>
                                             <input type="file" wire:model="job_status_certificate" class="form-control form-control-sm shadow-none">
-                                            <div wire:loading wire:target="job_status_certificate" class="text-primary mt-1" style="font-size: 0.75rem;">جاري رفع الملف...</div>
                                         </div>
                                     </div>
-
                                     <div class="col-md-6">
                                         <div class="p-2.5 border rounded-3 bg-light shadow-sm">
                                             <label class="form-label fw-semibold text-secondary mb-1" style="font-size: 0.82rem;">صورة شهادة إعداد مدربين (TOT)</label>
                                             <input type="file" wire:model="tot_certificate" class="form-control form-control-sm shadow-none">
-                                            <div wire:loading wire:target="tot_certificate" class="text-primary mt-1" style="font-size: 0.75rem;">جاري رفع الملف...</div>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
 
                         </div>
 
-                        <!-- زر الحفظ النهائي -->
+                        <!-- زر الحفظ النهائي (يتم تعطيله تلقائياً إذا كان الرقم القومي مسجلاً مسبقاً) -->
                         <div class="row mt-3">
                             <div class="col-12 text-end">
-                                <button type="submit" class="btn btn-success px-4 py-2 shadow-sm fw-bold rounded-pill" style="font-size: 0.9rem;">
-                                    <i class="bi bi-save2-fill me-1"></i> حفظ بيانات المدرب
+                                <button type="submit"
+                                        class="btn px-4 py-2 shadow-sm fw-bold rounded-pill {{ $existingTrainer ? 'btn-secondary opacity-50' : 'btn-success' }}"
+                                        style="font-size: 0.9rem;"
+                                        @if($existingTrainer) disabled @endif>
+                                    <i class="bi bi-save2-fill me-1"></i>
+                                    @if($existingTrainer) محظور الحفظ (المدرب مسجل مسبقاً) @else حفظ بيانات المدرب @endif
                                 </button>
                             </div>
                         </div>

@@ -9,6 +9,7 @@ use App\Models\TrainingProgramSchedule;
 use App\Models\ProgramScheduleTrainer;
 use App\Models\TrainingHall;
 use App\Models\TrainingProgramType;
+use App\Models\Training\Trainer; // استيراد نموذج المحاضرين
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Exports\TrainingSchedulesExport;
@@ -17,6 +18,8 @@ use Maatwebsite\Excel\Facades\Excel;
 class TrainingScheduleManager extends Component
 {
     use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
 
     // متغير لتحديد التبويب النشط حالياً
     public $activeTab = 1;
@@ -42,8 +45,9 @@ class TrainingScheduleManager extends Component
     public $schedule_status = 'draft';
     public $notes;
 
-    // مصفوفة إدارة المحاضرين المتعددين
+    // مصفوفة إدارة المحاضرين المتعددين وحقول البحث الخاصة بهم
     public $trainers = [];
+    public $trainerSearch = [];
 
     // قائمة التواريخ المتاحة للبرنامج بناءً على تاريخ البداية والنهاية واستبعاد الجمعة
     public $availableDates = [];
@@ -78,7 +82,6 @@ class TrainingScheduleManager extends Component
     // دالة تصدير البيانات إلى ملف Excel
     public function exportExcel()
     {
-        // جلب البرامج المفلترة حالياً
         $programs = TrainingProgram::with(['programType', 'hall', 'schedule.hall', 'schedule.trainers'])
             ->where('approval_status', 'approved')
             ->when($this->search, function ($query) {
@@ -88,7 +91,7 @@ class TrainingScheduleManager extends Component
                 });
             })
             ->when($this->filter_program_type, function ($query) {
-                $query->where('type', $this->filter_program_type);
+                $query->where('program_type_id', $this->filter_program_type);
             })
             ->whereHas('schedule', function ($query) {
                 $query->when($this->filter_from_date, function ($q) {
@@ -175,12 +178,37 @@ class TrainingScheduleManager extends Component
         return $days[$dayOfWeek] ?? '';
     }
 
+    // جلب المحاضرين المطابقين للبحث في صفوف جدول المحاضرين
+    public function getMatchingTrainersForIndex($index)
+    {
+        $search = $this->trainerSearch[$index] ?? '';
+
+        if (strlen(trim($search)) < 1) {
+            return collect();
+        }
+
+        return Trainer::where('status', 'approved')
+            ->where(function($q) use ($search) {
+                $q->where('name_ar', 'like', '%' . $search . '%')
+                  ->orWhere('national_id', 'like', '%' . $search . '%');
+            })
+            ->limit(5)
+            ->get();
+    }
+
+    // اختيار المحاضر من القائمة المنبثقة للبحث
+    public function selectTrainerForRow($index, $name)
+    {
+        $this->trainers[$index]['trainer_name'] = $name;
+        $this->trainerSearch[$index] = $name;
+    }
+
     // فتح نافذة الجدولة لبرنامج معين
     public function openScheduleModal($id)
     {
         $this->programId = $id;
         $this->selectedProgram = TrainingProgram::with('schedule.trainers')->findOrFail($id);
-        $this->activeTab = 1; // إعادة تعيين التبويب الأول عند فتح النافذة
+        $this->activeTab = 1;
 
         $schedule = $this->selectedProgram->schedule;
 
@@ -193,7 +221,7 @@ class TrainingScheduleManager extends Component
             $this->schedule_status = $schedule->schedule_status;
             $this->notes = $schedule->notes;
 
-            $this->calculateEndDate(); // إعادة حساب التواريخ المتاحة
+            $this->calculateEndDate();
 
             $this->trainers = $schedule->trainers->map(function($t) {
                 return [
@@ -211,7 +239,7 @@ class TrainingScheduleManager extends Component
             $this->schedule_status = 'draft';
             $this->notes = '';
 
-            $this->calculateEndDate(); // حساب تاريخ النهاية للجدولة الجديدة
+            $this->calculateEndDate();
 
             $this->trainers = [
                 [
@@ -223,23 +251,32 @@ class TrainingScheduleManager extends Component
             ];
         }
 
+        // تهيئة حقول البحث للمحاضرين
+        $this->trainerSearch = collect($this->trainers)->mapWithKeys(function ($t, $index) {
+            return [$index => $t['trainer_name']];
+        })->toArray();
+
         $this->dispatch('show-schedule-modal');
     }
 
     public function addTrainerRow()
     {
+        $newIndex = count($this->trainers);
         $this->trainers[] = [
             'id' => null,
             'trainer_name' => '',
             'assigned_days' => [],
             'session_topics' => ''
         ];
+        $this->trainerSearch[$newIndex] = '';
     }
 
     public function removeTrainerRow($index)
     {
         unset($this->trainers[$index]);
+        unset($this->trainerSearch[$index]);
         $this->trainers = array_values($this->trainers);
+        $this->trainerSearch = array_values($this->trainerSearch);
     }
 
     public function saveSchedule()
@@ -292,38 +329,42 @@ class TrainingScheduleManager extends Component
 
     public function render()
     {
-        $programs = TrainingProgram::with(['programType', 'hall', 'schedule.hall', 'schedule.trainers'])
+        $programs = TrainingProgram::query()
+            ->with(['programType', 'hall', 'schedule.hall', 'schedule.trainers'])
             ->where('approval_status', 'approved')
-            // فلتر البحث بالنص (الاسم أو الكود)
             ->when($this->search, function ($query) {
                 $query->where(function($q) {
                     $q->where('name_ar', 'like', '%' . $this->search . '%')
                       ->orWhere('code', 'like', '%' . $this->search . '%');
                 });
             })
-            // فلتر نوع البرنامج التدريبي
             ->when($this->filter_program_type, function ($query) {
                 $query->where('program_type_id', $this->filter_program_type);
             })
-            // فلاتر جدول الجدولة (التاريخ، الحالة، المحاضر، القاعة)
-            ->whereHas('schedule', function ($query) {
-                $query->when($this->filter_from_date, function ($q) {
-                    $q->where('start_date', '>=', $this->filter_from_date);
-                })
-                ->when($this->filter_to_date, function ($q) {
-                    $q->where('end_date', '<=', $this->filter_to_date);
-                })
-                ->when($this->filter_status, function ($q) {
-                    $q->where('schedule_status', $this->filter_status);
-                })
-                ->when($this->filter_hall, function ($q) {
-                    $q->where('hall_id', $this->filter_hall);
-                })
-                ->when($this->filter_trainer, function ($q) {
-                    $q->whereHas('trainers', function ($tq) {
-                        $tq->where('trainer_name', 'like', '%' . $this->filter_trainer . '%');
+            ->where(function ($query) {
+                $query->whereHas('schedule', function ($q) {
+                    $q->when($this->filter_from_date, function ($subQ) {
+                        $subQ->where('start_date', '>=', $this->filter_from_date);
+                    })
+                    ->when($this->filter_to_date, function ($subQ) {
+                        $subQ->where('end_date', '<=', $this->filter_to_date);
+                    })
+                    ->when($this->filter_status, function ($subQ) {
+                        $subQ->where('schedule_status', $this->filter_status);
+                    })
+                    ->when($this->filter_hall, function ($subQ) {
+                        $subQ->where('hall_id', $this->filter_hall);
+                    })
+                    ->when($this->filter_trainer, function ($subQ) {
+                        $subQ->whereHas('trainers', function ($tq) {
+                            $tq->where('trainer_name', 'like', '%' . $this->filter_trainer . '%');
+                        });
                     });
                 });
+
+                if (empty($this->filter_from_date) && empty($this->filter_to_date) && empty($this->filter_status) && empty($this->filter_hall) && empty($this->filter_trainer)) {
+                    $query->orWhereDoesntHave('schedule');
+                }
             })
             ->latest()
             ->paginate(10);

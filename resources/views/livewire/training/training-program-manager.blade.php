@@ -4,8 +4,8 @@
         <h5 class="fw-bold text-primary mb-0">
             <i class="bi bi-journal-plus me-1"></i> إدخال وإدارة البرامج التدريبية
         </h5>
-        <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#programFormCollapse" aria-expanded="{{ $isEditMode ? 'true' : 'false' }}">
-            <i class="bi bi-plus-lg me-1"></i> {{ $isEditMode ? 'تعديل بيانات البرنامج' : 'إضافة برنامج تدريبي جديد' }}
+        <button class="btn btn-primary btn-sm" type="button" wire:click="toggleForm">
+            <i class="bi bi-plus-lg me-1"></i> {{ $isEditMode ? 'تعديل بيانات البرنامج' : ($showForm ? 'إغلاق النموذج' : 'إضافة برنامج تدريبي جديد') }}
         </button>
     </div>
 
@@ -23,14 +23,12 @@
         </div>
     @endif
 
-    <!-- نموذج الإضافة والتعديل الشامل -->
-    <div class="collapse {{ $isEditMode ? 'show' : '' }} mb-4" id="programFormCollapse">
+    <!-- نموذج الإضافة والتعديل الشامل (متحكم به عبر متغير showForm في الكلاس) -->
+    <div class="mb-4 {{ $showForm || $isEditMode ? '' : 'd-none' }}" id="programFormCollapse">
         <div class="card border-0 shadow-sm rounded-3">
             <div class="card-header bg-primary text-white py-2 fw-bold d-flex justify-content-between align-items-center">
                 <span>{{ $isEditMode ? 'تعديل البرنامج التدريبي' : 'إضافة برنامج تدريبي جديد' }}</span>
-                @if($isEditMode)
-                    <button type="button" wire:click="resetFields" class="btn btn-light btn-sm py-0 px-2" style="font-size: 0.75rem;">إلغاء</button>
-                @endif
+                <button type="button" wire:click="resetFields" class="btn btn-light btn-sm py-0 px-2" style="font-size: 0.75rem;">إلغاء وإغلاق</button>
             </div>
             <div class="card-body bg-light">
                 <form wire:submit.prevent="save">
@@ -79,12 +77,43 @@
 
                         <div class="col-md-3">
                             <label class="form-label small fw-bold">مستوى البرنامج</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="level" placeholder="مثال: مبتدئ، متقدم، استشاري">
+                            <select class="form-select form-select-sm" wire:model="level">
+                                <option value="">-- اختر مستوى البرنامج --</option>
+                                <option value="مبتدئ">مبتدئ</option>
+                                <option value="متوسط">متوسط</option>
+                                <option value="متقدم">متقدم</option>
+                            </select>
                         </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">استشاري البرنامج / المسؤول العلمي</label>
-                            <input type="text" class="form-control form-control-sm" wire:model="consultant_name" placeholder="اسم الاستشاري المشرف">
+                        <!-- حقل البحث الحي عن الاستشاري / المحاضر -->
+                        <div class="col-md-3 position-relative">
+                            <label class="form-label small fw-bold">استشاري البرنامج / المحاضر المسؤول</label>
+
+                            <input type="text"
+                                   class="form-control form-control-sm"
+                                   wire:model.live.debounce.300ms="consultantSearch"
+                                   placeholder="اكتب للبحث عن اسم المحاضر..."
+                                   autocomplete="off">
+
+                            <!-- القائمة المنسدلة للنتائج المطابقة -->
+                            @if(!empty($consultantSearch) && $consultantSearch !== $consultant_name && $this->matchingTrainers->isNotEmpty())
+                                <div class="card position-absolute w-100 shadow-sm border mt-1" style="z-index: 1050; max-height: 180px; overflow-y: auto;">
+                                    <ul class="list-group list-group-flush small mb-0">
+                                        @foreach($this->matchingTrainers as $trainer)
+                                            <li>
+                                                <button type="button"
+                                                        wire:click.prevent="selectConsultant('{{ $trainer->name_ar }}')"
+                                                        class="list-group-item list-group-item-action py-1.5 px-2 text-end">
+                                                    <span class="fw-bold text-dark">{{ $trainer->name_ar }}</span>
+                                                    <small class="text-muted d-block" style="font-size: 0.72rem;">
+                                                        الرقم القومي: {{ $trainer->national_id }} | التخصص: {{ $trainer->specialization->name ?? 'غير محدد' }}
+                                                    </small>
+                                                </button>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="col-md-4">

@@ -47,6 +47,7 @@ use App\Livewire\Training\TrainingApprovalManager;
 use App\Livewire\Training\TrainingScheduleManager;
 use App\Livewire\Training\TrainerManager;
 use App\Livewire\Training\TrainerApprovalManager;
+use App\Livewire\Training\TrainersList;
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
     return redirect()->route('login');
@@ -201,6 +202,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/trainers', TrainerManager::class)->name('trainers');
         // مسار إدارة الاعتمادات ومتابعة السجل التدقيقي للمدربين
         Route::get('/trainers/approvals', TrainerApprovalManager::class)->name('trainers.approvals');
+        // مسار عرض قائمة المدربين
+        Route::get('/trainers/list', TrainersList::class)->name('trainers.list');
+        //مسار تعديل بيانات المدرب
+        Route::get('/trainers/{trainer}/edit', TrainerManager::class)->name('trainers.edit');
+        //مسار حذف بيانات المدرب
+        Route::get('/trainers/{trainer}/delete', TrainerManager::class)->name('trainers.delete');
     });
 
 });

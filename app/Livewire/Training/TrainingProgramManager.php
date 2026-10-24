@@ -11,6 +11,7 @@ use App\Models\TrainingMethod;
 use App\Models\KnowledgeMeasurement;
 use App\Models\ImpactMeasurement;
 use App\Models\JobStatus;
+use App\Models\Training\Trainer; // تأكد من استيراد نموذج Trainer
 use Illuminate\Support\Facades\Auth;
 
 class TrainingProgramManager extends Component
@@ -18,6 +19,8 @@ class TrainingProgramManager extends Component
     use WithPagination;
 
     protected $paginationTheme = 'bootstrap';
+
+    public $showForm = false;
 
     // حقول النموذج الأساسية
     public $programId;
@@ -32,7 +35,7 @@ class TrainingProgramManager extends Component
     public $training_hours = 0;
     public $courses_count_per_year = 1;
 
-    // أهداف البرنامج ومططلباته
+    // أهداف البرنامج ومتطلباته
     public $objective_knowledge = '';
     public $objective_skills = '';
     public $objective_attitude = '';
@@ -48,9 +51,38 @@ class TrainingProgramManager extends Component
     public $search = '';
     public $isEditMode = false;
 
+    public $consultantSearch = ''; // النص المكتوب للبحث عن المحاضر
+
+    //  هذه الدالة لفتح/إغلاق النموذج
+    public function toggleForm()
+    {
+        $this->showForm = !$this->showForm;
+    }
+
     public function mount()
     {
         $this->generateCode();
+    }
+
+    // جلب المحاضرين المطابقين للكتابة (Autocomplete)
+    public function getMatchingTrainersProperty()
+    {
+        if (strlen(trim($this->consultantSearch)) < 1) {
+            return [];
+        }
+
+        return Trainer::with('specialization')
+            ->where('name_ar', 'like', '%' . $this->consultantSearch . '%')
+            ->orWhere('national_id', 'like', '%' . $this->consultantSearch . '%')
+            ->limit(5)
+            ->get();
+    }
+
+    // اختيار المحاضر من القائمة المنسدلة
+    public function selectConsultant($name)
+    {
+        $this->consultant_name = $name;
+        $this->consultantSearch = $name;
     }
 
     protected function rules()
@@ -106,7 +138,7 @@ class TrainingProgramManager extends Component
     {
         $this->reset([
             'programId', 'name_ar', 'name_en', 'program_type_id', 'hall_id',
-            'level', 'consultant_name', 'duration_days', 'training_hours',
+            'level', 'consultant_name', 'consultantSearch', 'duration_days', 'training_hours',
             'courses_count_per_year', 'objective_knowledge', 'objective_skills',
             'objective_attitude', 'prerequisites', 'selectedMethods',
             'selectedKnowledge', 'selectedImpact', 'selectedAudiences', 'isEditMode'
@@ -161,6 +193,8 @@ class TrainingProgramManager extends Component
         $program->impactMeasurements()->sync($this->selectedImpact);
         $program->targetAudiences()->sync($this->selectedAudiences);
 
+        $this->showForm = false;
+        $this->isEditMode = false;
         $this->resetFields();
     }
 
@@ -168,6 +202,7 @@ class TrainingProgramManager extends Component
     {
         $program = TrainingProgram::with(['methods', 'knowledgeMeasurements', 'impactMeasurements', 'targetAudiences'])->findOrFail($id);
 
+        $this->showForm = true;
         $this->programId = $program->id;
         $this->code = $program->code;
         $this->name_ar = $program->name_ar;
@@ -176,6 +211,7 @@ class TrainingProgramManager extends Component
         $this->hall_id = $program->hall_id;
         $this->level = $program->level;
         $this->consultant_name = $program->consultant_name;
+        $this->consultantSearch = $program->consultant_name; // تعبئة حقل البحث عند التعديل
         $this->duration_days = $program->duration_days;
         $this->training_hours = $program->training_hours;
         $this->courses_count_per_year = $program->courses_count_per_year;
@@ -197,7 +233,6 @@ class TrainingProgramManager extends Component
     {
         try {
             $program = TrainingProgram::findOrFail($id);
-            // حذف الارتباطات أولاً لضمان عدم وجود قيود
             $program->methods()->detach();
             $program->knowledgeMeasurements()->detach();
             $program->impactMeasurements()->detach();
@@ -231,7 +266,7 @@ class TrainingProgramManager extends Component
             'allMethods' => TrainingMethod::all(),
             'allKnowledge' => KnowledgeMeasurement::all(),
             'allImpact' => ImpactMeasurement::all(),
-            'allAudiences' => JobStatus::all(), // استخدام الحالات الوظيفية كفئات مستهدفة
+            'allAudiences' => JobStatus::all(),
         ])->layout('layouts.app', ['title' => 'إدخال برنامج تدريبي']);
     }
 }

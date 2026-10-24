@@ -300,6 +300,11 @@
                                         </a>
                                     </li>
                                     <li class="nav-item">
+                                        <a href="{{ route('training.trainers.list') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-list-ul me-1"></i> عرض قائمة المحاضرين
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
                                             <i class="bi bi-calendar-event me-1"></i> جدول ومواعيد المحاضرين
                                         </a>

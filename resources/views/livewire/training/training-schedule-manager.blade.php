@@ -96,81 +96,154 @@
             </div>
         </div>
 
-        <!-- جدول العرض الرئيسي -->
+        <!-- جدول العرض الرئيسي مع دعم التمرير الأفقي والراحة البصرية -->
         <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
-                <span class="fw-bold text-secondary">البرامج الجاهزة للجدولة والتنفيذ</span>
-                <span class="badge bg-primary">إجمالي النتائج: {{ $programs->total() }}</span>
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                <span class="fw-bold text-secondary">
+                    <i class="bi bi-table me-1 text-primary"></i> البرامج الجاهزة للجدولة والتنفيذ
+                </span>
+                <span class="badge bg-primary px-3 py-2" style="font-size: 0.85rem;">
+                    إجمالي النتائج: {{ $programs->total() }}
+                </span>
             </div>
-            <div class="card-body p-0 table-responsive">
-                <table class="table table-hover table-striped mb-0 text-center align-middle small">
-                    <thead class="table-light">
-                        <tr>
-                            <th>#</th>
-                            <th>الكود</th>
-                            <th>اسم البرنامج</th>
-                            <th>نوع البرنامج</th>
-                            <th>حالة الجدولة</th>
-                            <th>تواريخ التنفيذ والقاعة</th>
-                            <th>المحاضرون</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($programs as $item)
-                            <tr wire:key="program-schedule-{{ $item->id }}">
-                                <td>{{ $loop->iteration }}</td>
-                                <td><span class="badge bg-light text-dark border">{{ $item->code }}</span></td>
-                                <td class="fw-bold text-start">{{ $item->name_ar }}</td>
-                                <td><span class="badge bg-info text-dark">{{ $item->programType->name ?? '-' }}</span></td>
-                                <td>
-                                    @if($item->schedule)
-                                        @if($item->schedule->schedule_status == 'active')
-                                            <span class="badge bg-success">نشط وجاهز</span>
-                                        @elseif($item->schedule->schedule_status == 'in_progress')
-                                            <span class="badge bg-primary">جاري التنفيذ</span>
-                                        @elseif($item->schedule->schedule_status == 'completed')
-                                            <span class="badge bg-secondary">تم التنفيذ</span>
-                                        @elseif($item->schedule->schedule_status == 'cancelled')
-                                            <span class="badge bg-danger">ملغي</span>
+
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                    <table class="table table-hover table-striped mb-0 text-center align-middle" style="white-space: nowrap; font-size: 0.88rem;">
+                        <thead class="table-light text-secondary sticky-top" style="z-index: 10;">
+                            <tr style="height: 45px;">
+                                <th class="py-3">#</th>
+                                <th class="py-3">الكود</th>
+                                <th class="py-3 text-start">اسم البرنامج</th>
+                                <th class="py-3">نوع البرنامج</th>
+                                <th class="py-3">حالة الجدولة</th>
+                                <th class="py-3">تاريخ التنفيذ (البداية)</th>
+                                <th class="py-3">تاريخ نهاية التنفيذ</th>
+                                <th class="py-3">عدد أيام التدريب</th>
+                                <th class="py-3">مكان التنفيذ</th>
+                                <th class="py-3 text-start">المحاضرون</th>
+                                <th class="py-3">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($programs as $index => $item)
+                                <tr wire:key="program-schedule-{{ $item->id }}" style="height: 50px;">
+                                    <td class="text-muted fw-semibold">{{ $programs->firstItem() + $index }}</td>
+
+                                    <!-- الكود -->
+                                    <td>
+                                        <span class="badge bg-light text-dark border px-2 py-1 font-monospace">
+                                            {{ $item->code }}
+                                        </span>
+                                    </td>
+
+                                    <!-- اسم البرنامج -->
+                                    <td class="fw-bold text-start text-dark" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->name_ar }}">
+                                        {{ $item->name_ar }}
+                                    </td>
+
+                                    <!-- نوع البرنامج -->
+                                    <td>
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
+                                            {{ $item->programType->name ?? '---' }}
+                                        </span>
+                                    </td>
+
+                                    <!-- حالة الجدولة -->
+                                    <td>
+                                        @if($item->schedule)
+                                            @php
+                                                $statusClass = match($item->schedule->schedule_status) {
+                                                    'active' => 'bg-success text-white',
+                                                    'in_progress' => 'bg-primary text-white',
+                                                    'completed' => 'bg-secondary text-white',
+                                                    'cancelled' => 'bg-danger text-white',
+                                                    default => 'bg-warning text-dark',
+                                                };
+                                                $statusText = match($item->schedule->schedule_status) {
+                                                    'active' => 'نشط وجاهز',
+                                                    'in_progress' => 'جاري التنفيذ',
+                                                    'completed' => 'تم التنفيذ',
+                                                    'cancelled' => 'ملغي',
+                                                    default => 'مسودة جدولة',
+                                                };
+                                            @endphp
+                                            <span class="badge {{ $statusClass }} px-2 py-1">
+                                                {{ $statusText }}
+                                            </span>
                                         @else
-                                            <span class="badge bg-warning text-dark">مسودة جدولة</span>
+                                            <span class="badge bg-light text-muted border px-2 py-1">
+                                                غير مجدول
+                                            </span>
                                         @endif
-                                    @else
-                                        <span class="badge bg-light text-muted border">غير مجدول</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($item->schedule)
-                                        <div>{{ $item->schedule->start_date }} إلى {{ $item->schedule->end_date }}</div>
-                                        <span class="text-muted" style="font-size: 11px;">القاعة: {{ $item->schedule->hall->name ?? '-' }}</span>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($item->schedule && $item->schedule->trainers->count() > 0)
-                                        <div class="fw-bold text-dark">{{ $item->schedule->trainers->pluck('trainer_name')->implode(', ') }}</div>
-                                    @else
-                                        <span class="text-muted">-</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <button wire:click="openScheduleModal({{ $item->id }})" class="btn btn-outline-primary btn-sm py-0 px-2" title="جدولة وتنشيط">
-                                        <i class="bi bi-calendar-plus"></i> جدولة وتنشيط
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">لا توجد برامج مطابقة لخيارات البحث الحالية.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    </td>
+
+                                    <!-- تاريخ التنفيذ (البداية) -->
+                                    <td class="text-secondary font-monospace">
+                                        {{ $item->schedule->start_date ?? '---' }}
+                                    </td>
+
+                                    <!-- تاريخ نهاية التنفيذ -->
+                                    <td class="text-secondary font-monospace">
+                                        {{ $item->schedule->end_date ?? '---' }}
+                                    </td>
+
+                                    <!-- عدد أيام التدريب -->
+                                    <td>
+                                        <span class="fw-bold text-dark">{{ $item->duration_days }}</span> أيام
+                                    </td>
+
+                                    <!-- مكان التنفيذ (القاعة) -->
+                                    <td>
+                                        <span class="text-dark">
+                                            {{ $item->schedule->hall->name ?? ($item->hall->name ?? '---') }}
+                                        </span>
+                                    </td>
+
+                                    <!-- المحاضرون -->
+                                    <td class="text-start" style="max-width: 220px; overflow: hidden; text-overflow: ellipsis;" title="
+                                        @if($item->schedule && $item->schedule->trainers->isNotEmpty())
+                                            {{ $item->schedule->trainers->pluck('trainer_name')->implode(', ') }}
+                                        @else
+                                            {{ $item->consultant_name ?? '---' }}
+                                        @endif
+                                    ">
+                                        <span class="text-muted small">
+                                            @if($item->schedule && $item->schedule->trainers->isNotEmpty())
+                                                {{ $item->schedule->trainers->pluck('trainer_name')->implode('، ') }}
+                                            @else
+                                                {{ $item->consultant_name ?? '---' }}
+                                            @endif
+                                        </span>
+                                    </td>
+
+                                    <!-- الإجراءات -->
+                                    <td>
+                                        <button type="button"
+                                                wire:click="openScheduleModal({{ $item->id }})"
+                                                class="btn btn-outline-primary btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 shadow-sm">
+                                            <i class="bi bi-calendar-check"></i>
+                                            <span>{{ $item->schedule ? 'تعديل الجدولة' : 'جدولة وتنشيط' }}</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="11" class="text-center py-5 text-muted">
+                                        <div class="py-4">
+                                            <i class="bi bi-folder2-open display-4 text-secondary opacity-50 mb-2 d-block"></i>
+                                            <span>لا توجد برامج مطابقة لخيارات البحث والحالة الحالية.</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
+
             @if($programs->hasPages())
-                <div class="card-footer bg-white py-2">
+                <div class="card-footer bg-white py-3 border-top">
                     {{ $programs->links() }}
                 </div>
             @endif
@@ -192,7 +265,7 @@
                             <ul class="nav nav-pills nav-fill mb-3 bg-white p-2 rounded shadow-sm">
                                 <li class="nav-item">
                                     <button type="button" wire:click="setTab(1)" class="nav-link fw-bold {{ $activeTab == 1 ? 'active bg-primary text-white' : 'text-dark' }}">
-                                        <i class="bi bi-calendar-check me-1"></i> 1. تواريخ وقاعات التنفيذ
+                                        1. <i class="bi bi-calendar-check me-1"></i>تواريخ وقاعات التنفيذ
                                     </button>
                                 </li>
                                 <li class="nav-item">
@@ -238,7 +311,7 @@
                                         <select class="form-select form-select-sm" wire:model="hall_id">
                                             <option value="">-- اختر القاعة --</option>
                                             @foreach($halls as $hall)
-                                                <option value="{{ $hall->id }}">{{ $hall->name }} (السعة: {{ $hall->chairs_count }})</option>
+                                                <option value="{{ $hall->id }}">{{ $hall->name }} (السعة: {{ $hall->chairs_count ?? 25 }})</option>
                                             @endforeach
                                         </select>
                                         @error('hall_id') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -281,8 +354,8 @@
                                     <table class="table table-bordered table-sm align-middle mb-0">
                                         <thead class="table-light text-center">
                                             <tr>
-                                                <th style="width: 25%;">اسم المحاضر / الاستشاري *</th>
-                                                <th style="width: 45%;">التواريخ والأيام المخصصة له</th>
+                                                <th style="width: 30%;">اختر المحاضر / الاستشاري *</th>
+                                                <th style="width: 40%;">التواريخ والأيام المخصصة له</th>
                                                 <th style="width: 25%;">المحاور أو الجلسات التدريبية</th>
                                                 <th style="width: 5%;">حذف</th>
                                             </tr>
@@ -291,7 +364,38 @@
                                             @foreach($trainers as $index => $trainer)
                                                 <tr>
                                                     <td>
-                                                        <input type="text" class="form-control form-control-sm" wire:model="trainers.{{ $index }}.trainer_name" placeholder="اسم المحاضر...">
+                                                        <div class="position-relative">
+                                                            <input type="text"
+                                                                   class="form-control form-control-sm"
+                                                                   wire:model.live.debounce.300ms="trainerSearch.{{ $index }}"
+                                                                   placeholder="اكتب للبحث عن اسم المحاضر..."
+                                                                   autocomplete="off">
+
+                                                            <input type="hidden" wire:model="trainers.{{ $index }}.trainer_name">
+
+                                                            @php
+                                                                $matchingOptions = $this->getMatchingTrainersForIndex($index);
+                                                            @endphp
+
+                                                            @if(!empty($trainerSearch[$index]) && ($trainerSearch[$index] !== ($trainers[$index]['trainer_name'] ?? '')) && $matchingOptions->isNotEmpty())
+                                                                <div class="card position-absolute w-100 shadow-sm border mt-1" style="z-index: 1050; max-height: 150px; overflow-y: auto;">
+                                                                    <ul class="list-group list-group-flush small mb-0">
+                                                                        @foreach($matchingOptions as $trainerOpt)
+                                                                            <li>
+                                                                                <button type="button"
+                                                                                        wire:click.prevent="selectTrainerForRow({{ $index }}, '{{ $trainerOpt->name_ar }}')"
+                                                                                        class="list-group-item list-group-item-action py-1 px-2 text-end">
+                                                                                    <span class="fw-bold text-dark">{{ $trainerOpt->name_ar }}</span>
+                                                                                    <small class="text-muted d-block" style="font-size: 0.7rem;">
+                                                                                        الرقم القومي: {{ $trainerOpt->national_id }} | التخصص: {{ $trainerOpt->current_job ?? 'محاضر' }}
+                                                                                    </small>
+                                                                                </button>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
+                                                            @endif
+                                                        </div>
                                                     </td>
                                                     <td>
                                                         <div class="p-2 border rounded bg-light" style="max-height: 120px; overflow-y: auto;">

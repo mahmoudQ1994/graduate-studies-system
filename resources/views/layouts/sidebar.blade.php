@@ -318,6 +318,41 @@
                             </div>
                         </li>
 
+                        <!-- 3. قائمة المتدربين  -->
+                        <li class="nav-item">
+                            <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
+                            data-bs-toggle="collapse"
+                            data-bs-parent="#trainingDepartmentMenu"
+                            href="#traineesSubMenu"
+                            role="button"
+                            aria-expanded="false">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-lines-fill fs-6"></i>
+                                    <span>المتدربون</span>
+                                </div>
+                                <i class="bi bi-chevron-down extra-small"></i>
+                            </a>
+                            <div class="collapse ms-2 mt-1" id="traineesSubMenu" data-bs-parent="#trainingDepartmentMenu">
+                                <ul class="nav flex-column gap-1 border-start border-secondary ps-2">
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.trainees') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-person-plus me-1"></i> أضافة المتدربين
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-list-ul me-1"></i> عرض قائمة المتدربين
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-calendar-event me-1"></i> جدول ومواعيد المتدربين
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+
                         <!-- إدخال بيانات متدربين -->
                         <li class="nav-item">
                             <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
@@ -355,6 +390,11 @@
                                     <li class="nav-item">
                                         <a href="{{ route('training.methods') }}" class="nav-link py-1 px-2 small text-white opacity-75">
                                             <i class="bi bi-sliders me-1"></i> إدخال أسلوب التدريب
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.job-titles') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-person-badge me-1"></i> تكويد وإدارة الوظائف المتاحة
                                         </a>
                                     </li>
                                     <li class="nav-item">

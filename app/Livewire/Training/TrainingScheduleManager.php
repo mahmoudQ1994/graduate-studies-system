@@ -9,7 +9,7 @@ use App\Models\TrainingProgramSchedule;
 use App\Models\ProgramScheduleTrainer;
 use App\Models\TrainingHall;
 use App\Models\TrainingProgramType;
-use App\Models\Training\Trainer; // استيراد نموذج المحاضرين
+use App\Models\Training\Trainer;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Exports\TrainingSchedulesExport;
@@ -35,6 +35,7 @@ class TrainingScheduleManager extends Component
 
     // المتغيرات الخاصة بنافذة الجدولة والتنشيط
     public $programId;
+    public $scheduleId; // لتحديد ما إذا كنا نعدل جدولاً حالياً أو ننشئ جدولاً جديداً
     public $selectedProgram;
 
     public $hall_id;
@@ -82,34 +83,34 @@ class TrainingScheduleManager extends Component
     // دالة تصدير البيانات إلى ملف Excel
     public function exportExcel()
     {
-        $programs = TrainingProgram::with(['programType', 'hall', 'schedule.hall', 'schedule.trainers'])
-            ->where('approval_status', 'approved')
-            ->when($this->search, function ($query) {
-                $query->where(function($q) {
-                    $q->where('name_ar', 'like', '%' . $this->search . '%')
-                    ->orWhere('code', 'like', '%' . $this->search . '%');
-                });
+        $schedules = TrainingProgramSchedule::with(['trainingProgram.programType', 'hall', 'trainers'])
+            ->whereHas('trainingProgram', function ($query) {
+                $query->where('approval_status', 'approved')
+                      ->when($this->search, function ($q) {
+                          $q->where(function($subQ) {
+                              $subQ->where('name_ar', 'like', '%' . $this->search . '%')
+                                   ->orWhere('code', 'like', '%' . $this->search . '%');
+                          });
+                      })
+                      ->when($this->filter_program_type, function ($q) {
+                          $q->where('program_type_id', $this->filter_program_type);
+                      });
             })
-            ->when($this->filter_program_type, function ($query) {
-                $query->where('program_type_id', $this->filter_program_type);
+            ->when($this->filter_from_date, function ($query) {
+                $query->where('start_date', '>=', $this->filter_from_date);
             })
-            ->whereHas('schedule', function ($query) {
-                $query->when($this->filter_from_date, function ($q) {
-                    $q->where('start_date', '>=', $this->filter_from_date);
-                })
-                ->when($this->filter_to_date, function ($q) {
-                    $q->where('end_date', '<=', $this->filter_to_date);
-                })
-                ->when($this->filter_status, function ($q) {
-                    $q->where('schedule_status', $this->filter_status);
-                })
-                ->when($this->filter_hall, function ($q) {
-                    $q->where('hall_id', $this->filter_hall);
-                })
-                ->when($this->filter_trainer, function ($q) {
-                    $q->whereHas('trainers', function ($tq) {
-                        $tq->where('trainer_name', 'like', '%' . $this->filter_trainer . '%');
-                    });
+            ->when($this->filter_to_date, function ($query) {
+                $query->where('end_date', '<=', $this->filter_to_date);
+            })
+            ->when($this->filter_status, function ($query) {
+                $query->where('schedule_status', $this->filter_status);
+            })
+            ->when($this->filter_hall, function ($query) {
+                $query->where('hall_id', $this->filter_hall);
+            })
+            ->when($this->filter_trainer, function ($query) {
+                $query->whereHas('trainers', function ($tq) {
+                    $tq->where('trainer_name', 'like', '%' . $this->filter_trainer . '%');
                 });
             })
             ->latest()
@@ -117,7 +118,7 @@ class TrainingScheduleManager extends Component
 
         $filename = "training_schedules_" . date('Y-m-d') . ".xlsx";
 
-        return Excel::download(new TrainingSchedulesExport($programs), $filename);
+        return Excel::download(new TrainingSchedulesExport($schedules), $filename);
     }
 
     // المراقب الحركي لـ Livewire عند تغيير تاريخ البداية
@@ -203,37 +204,42 @@ class TrainingScheduleManager extends Component
         $this->trainerSearch[$index] = $name;
     }
 
-    // فتح نافذة الجدولة لبرنامج معين
-    public function openScheduleModal($id)
+    // فتح نافذة الجدولة لبرنامج معين (إضافة دورة جديدة أو تعديل دورة محددة)
+    public function openScheduleModal($programId, $scheduleId = null)
     {
-        $this->programId = $id;
-        $this->selectedProgram = TrainingProgram::with('schedule.trainers')->findOrFail($id);
+        $this->programId = $programId;
+        $this->scheduleId = $scheduleId;
+        $this->selectedProgram = TrainingProgram::with('schedules.trainers')->findOrFail($programId);
         $this->activeTab = 1;
 
-        $schedule = $this->selectedProgram->schedule;
+        if ($scheduleId) {
+            // تعديل جدولة سابقة محددة
+            $schedule = TrainingProgramSchedule::with('trainers')->find($scheduleId);
+            if ($schedule) {
+                $this->hall_id = $schedule->hall_id;
+                $this->start_date = $schedule->start_date;
+                $this->end_date = $schedule->end_date;
+                $this->time_slot = $schedule->time_slot;
+                $this->max_capacity = $schedule->max_capacity;
+                $this->schedule_status = $schedule->schedule_status;
+                $this->notes = $schedule->notes;
 
-        if ($schedule) {
-            $this->hall_id = $schedule->hall_id;
-            $this->start_date = $schedule->start_date;
-            $this->end_date = $schedule->end_date;
-            $this->time_slot = $schedule->time_slot;
-            $this->max_capacity = $schedule->max_capacity;
-            $this->schedule_status = $schedule->schedule_status;
-            $this->notes = $schedule->notes;
+                $this->calculateEndDate();
 
-            $this->calculateEndDate();
-
-            $this->trainers = $schedule->trainers->map(function($t) {
-                return [
-                    'id' => $t->id,
-                    'trainer_name' => $t->trainer_name,
-                    'assigned_days' => is_array($t->assigned_days) ? $t->assigned_days : explode(',', $t->assigned_days),
-                    'session_topics' => $t->session_topics,
-                ];
-            })->toArray();
+                $this->trainers = $schedule->trainers->map(function($t) {
+                    return [
+                        'id' => $t->id,
+                        'trainer_name' => $t->trainer_name,
+                        'assigned_days' => is_array($t->assigned_days) ? $t->assigned_days : explode(',', $t->assigned_days),
+                        'session_topics' => $t->session_topics,
+                    ];
+                })->toArray();
+            }
         } else {
+            // إضافة دورة/جدولة جديدة كلياً لنفس البرنامج
             $this->hall_id = $this->selectedProgram->hall_id;
             $this->start_date = now()->format('Y-m-d');
+            $this->end_date = '';
             $this->time_slot = 'صباحي';
             $this->max_capacity = 25;
             $this->schedule_status = 'draft';
@@ -257,6 +263,17 @@ class TrainingScheduleManager extends Component
         })->toArray();
 
         $this->dispatch('show-schedule-modal');
+    }
+
+    // حذف جدول/دورة تنفيذ معينة
+    public function deleteSchedule($scheduleId)
+    {
+        $schedule = TrainingProgramSchedule::find($scheduleId);
+        if ($schedule) {
+            $schedule->trainers()->delete();
+            $schedule->delete();
+            session()->flash('message', 'تم حذف موعد الجدولة بنجاح.');
+        }
     }
 
     public function addTrainerRow()
@@ -291,9 +308,23 @@ class TrainingScheduleManager extends Component
             'trainers.*.trainer_name' => 'required|string|max:255',
         ]);
 
-        $schedule = TrainingProgramSchedule::updateOrCreate(
-            ['training_program_id' => $this->programId],
-            [
+        if ($this->scheduleId) {
+            // تحديث جدولة موجودة
+            $schedule = TrainingProgramSchedule::findOrFail($this->scheduleId);
+            $schedule->update([
+                'hall_id' => $this->hall_id,
+                'start_date' => $this->start_date,
+                'end_date' => $this->end_date,
+                'time_slot' => $this->time_slot,
+                'max_capacity' => $this->max_capacity,
+                'schedule_status' => $this->schedule_status,
+                'notes' => $this->notes,
+                'updated_by' => Auth::id(),
+            ]);
+        } else {
+            // إنشاء جدول/دورة تنفيذ جديدة كلياً
+            $schedule = TrainingProgramSchedule::create([
+                'training_program_id' => $this->programId,
                 'hall_id' => $this->hall_id,
                 'start_date' => $this->start_date,
                 'end_date' => $this->end_date,
@@ -303,9 +334,10 @@ class TrainingScheduleManager extends Component
                 'notes' => $this->notes,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
-            ]
-        );
+            ]);
+        }
 
+        // حذف المحاضرين القدامى وإعادة إدراجهم
         $schedule->trainers()->delete();
 
         foreach ($this->trainers as $trainerData) {
@@ -323,48 +355,45 @@ class TrainingScheduleManager extends Component
             }
         }
 
-        session()->flash('message', 'تم حفظ الجدولة وتنشيط البرنامج بنجاح.');
+        session()->flash('message', 'تم حفظ وتنشيط موعد الجدولة بنجاح.');
         $this->dispatch('close-schedule-modal');
     }
 
-    public function render()
+public function render()
     {
-        $programs = TrainingProgram::query()
-            ->with(['programType', 'hall', 'schedule.hall', 'schedule.trainers'])
-            ->where('approval_status', 'approved')
-            ->when($this->search, function ($query) {
-                $query->where(function($q) {
-                    $q->where('name_ar', 'like', '%' . $this->search . '%')
-                      ->orWhere('code', 'like', '%' . $this->search . '%');
-                });
+        // جلب المواعيد التنفيذية (TrainingProgramSchedule) مباشرة لضمان ظهور كل موعد كصف مستقل
+        $schedules = TrainingProgramSchedule::query()
+            ->with(['trainingProgram.programType', 'hall', 'trainers'])
+            ->whereHas('trainingProgram', function ($query) {
+                $query->where('approval_status', 'approved')
+                      ->when($this->search, function ($q) {
+                          $q->where(function($subQ) {
+                              $subQ->where('name_ar', 'like', '%' . $this->search . '%')
+                                   ->orWhere('code', 'like', '%' . $this->search . '%');
+                          });
+                      });
             })
             ->when($this->filter_program_type, function ($query) {
-                $query->where('program_type_id', $this->filter_program_type);
-            })
-            ->where(function ($query) {
-                $query->whereHas('schedule', function ($q) {
-                    $q->when($this->filter_from_date, function ($subQ) {
-                        $subQ->where('start_date', '>=', $this->filter_from_date);
-                    })
-                    ->when($this->filter_to_date, function ($subQ) {
-                        $subQ->where('end_date', '<=', $this->filter_to_date);
-                    })
-                    ->when($this->filter_status, function ($subQ) {
-                        $subQ->where('schedule_status', $this->filter_status);
-                    })
-                    ->when($this->filter_hall, function ($subQ) {
-                        $subQ->where('hall_id', $this->filter_hall);
-                    })
-                    ->when($this->filter_trainer, function ($subQ) {
-                        $subQ->whereHas('trainers', function ($tq) {
-                            $tq->where('trainer_name', 'like', '%' . $this->filter_trainer . '%');
-                        });
-                    });
+                $query->whereHas('trainingProgram', function ($q) {
+                    $q->where('program_type_id', $this->filter_program_type);
                 });
-
-                if (empty($this->filter_from_date) && empty($this->filter_to_date) && empty($this->filter_status) && empty($this->filter_hall) && empty($this->filter_trainer)) {
-                    $query->orWhereDoesntHave('schedule');
-                }
+            })
+            ->when($this->filter_from_date, function ($query) {
+                $query->where('start_date', '>=', $this->filter_from_date);
+            })
+            ->when($this->filter_to_date, function ($query) {
+                $query->where('end_date', '<=', $this->filter_to_date);
+            })
+            ->when($this->filter_status, function ($query) {
+                $query->where('schedule_status', $this->filter_status);
+            })
+            ->when($this->filter_hall, function ($query) {
+                $query->where('hall_id', $this->filter_hall);
+            })
+            ->when($this->filter_trainer, function ($query) {
+                $query->whereHas('trainers', function ($tq) {
+                    $tq->where('trainer_name', 'like', '%' . $this->filter_trainer . '%');
+                });
             })
             ->latest()
             ->paginate(10);
@@ -373,7 +402,7 @@ class TrainingScheduleManager extends Component
         $programTypes = TrainingProgramType::all();
 
         return view('livewire.training.training-schedule-manager', [
-            'programs' => $programs,
+            'schedules' => $schedules, // تمرير المواعيد التنفيذية مباشرة
             'halls' => $halls,
             'programTypes' => $programTypes,
         ])->layout('layouts.app');

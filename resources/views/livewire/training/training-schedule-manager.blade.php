@@ -96,14 +96,14 @@
             </div>
         </div>
 
-        <!-- جدول العرض الرئيسي مع دعم التمرير الأفقي والراحة البصرية -->
+        <!-- جدول العرض الرئيسي -->
         <div class="card border-0 shadow-sm rounded-3">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                 <span class="fw-bold text-secondary">
                     <i class="bi bi-table me-1 text-primary"></i> البرامج الجاهزة للجدولة والتنفيذ
                 </span>
                 <span class="badge bg-primary px-3 py-2" style="font-size: 0.85rem;">
-                    إجمالي النتائج: {{ $programs->total() }}
+                    إجمالي النتائج: {{ $schedules->total() }}
                 </span>
             </div>
 
@@ -126,105 +126,105 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($programs as $index => $item)
-                                <tr wire:key="program-schedule-{{ $item->id }}" style="height: 50px;">
-                                    <td class="text-muted fw-semibold">{{ $programs->firstItem() + $index }}</td>
+                            @forelse($schedules as $index => $sched)
+                                @php $program = $sched->trainingProgram; @endphp
+                                <tr wire:key="schedule-row-{{ $sched->id }}" style="height: 50px;">
+                                    <td class="text-muted fw-semibold">{{ $schedules->firstItem() + $index }}</td>
 
                                     <!-- الكود -->
                                     <td>
                                         <span class="badge bg-light text-dark border px-2 py-1 font-monospace">
-                                            {{ $item->code }}
+                                            {{ $program->code ?? '---' }}
                                         </span>
                                     </td>
 
                                     <!-- اسم البرنامج -->
-                                    <td class="fw-bold text-start text-dark" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis;" title="{{ $item->name_ar }}">
-                                        {{ $item->name_ar }}
+                                    <td class="fw-bold text-start text-dark" style="max-width: 230px; overflow: hidden; text-overflow: ellipsis;" title="{{ $program->name_ar ?? '' }}">
+                                        {{ $program->name_ar ?? '---' }}
                                     </td>
 
                                     <!-- نوع البرنامج -->
                                     <td>
                                         <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1">
-                                            {{ $item->programType->name ?? '---' }}
+                                            {{ $program->programType->name ?? '---' }}
                                         </span>
                                     </td>
 
                                     <!-- حالة الجدولة -->
                                     <td>
-                                        @if($item->schedule)
-                                            @php
-                                                $statusClass = match($item->schedule->schedule_status) {
-                                                    'active' => 'bg-success text-white',
-                                                    'in_progress' => 'bg-primary text-white',
-                                                    'completed' => 'bg-secondary text-white',
-                                                    'cancelled' => 'bg-danger text-white',
-                                                    default => 'bg-warning text-dark',
-                                                };
-                                                $statusText = match($item->schedule->schedule_status) {
-                                                    'active' => 'نشط وجاهز',
-                                                    'in_progress' => 'جاري التنفيذ',
-                                                    'completed' => 'تم التنفيذ',
-                                                    'cancelled' => 'ملغي',
-                                                    default => 'مسودة جدولة',
-                                                };
-                                            @endphp
-                                            <span class="badge {{ $statusClass }} px-2 py-1">
-                                                {{ $statusText }}
-                                            </span>
-                                        @else
-                                            <span class="badge bg-light text-muted border px-2 py-1">
-                                                غير مجدول
-                                            </span>
-                                        @endif
+                                        @php
+                                            $statusClass = match($sched->schedule_status) {
+                                                'active' => 'bg-success text-white',
+                                                'in_progress' => 'bg-primary text-white',
+                                                'completed' => 'bg-secondary text-white',
+                                                'cancelled' => 'bg-danger text-white',
+                                                default => 'bg-warning text-dark',
+                                            };
+                                            $statusText = match($sched->schedule_status) {
+                                                'active' => 'نشط وجاهز',
+                                                'in_progress' => 'جاري التنفيذ',
+                                                'completed' => 'تم التنفيذ',
+                                                'cancelled' => 'ملغي',
+                                                default => 'مسودة جدولة',
+                                            };
+                                        @endphp
+                                        <span class="badge {{ $statusClass }} px-2 py-1">
+                                            {{ $statusText }}
+                                        </span>
                                     </td>
 
                                     <!-- تاريخ التنفيذ (البداية) -->
-                                    <td class="text-secondary font-monospace">
-                                        {{ $item->schedule->start_date ?? '---' }}
+                                    <td class="text-secondary font-monospace fw-bold">
+                                        {{ $sched->start_date }}
                                     </td>
 
                                     <!-- تاريخ نهاية التنفيذ -->
-                                    <td class="text-secondary font-monospace">
-                                        {{ $item->schedule->end_date ?? '---' }}
+                                    <td class="text-secondary font-monospace fw-bold">
+                                        {{ $sched->end_date }}
                                     </td>
 
                                     <!-- عدد أيام التدريب -->
                                     <td>
-                                        <span class="fw-bold text-dark">{{ $item->duration_days }}</span> أيام
+                                        <span class="fw-bold text-dark">{{ $program->duration_days ?? 0 }}</span> أيام
                                     </td>
 
                                     <!-- مكان التنفيذ (القاعة) -->
                                     <td>
-                                        <span class="text-dark">
-                                            {{ $item->schedule->hall->name ?? ($item->hall->name ?? '---') }}
+                                        <span class="text-dark fw-semibold">
+                                            {{ $sched->hall->name ?? '---' }}
                                         </span>
                                     </td>
 
                                     <!-- المحاضرون -->
-                                    <td class="text-start" style="max-width: 220px; overflow: hidden; text-overflow: ellipsis;" title="
-                                        @if($item->schedule && $item->schedule->trainers->isNotEmpty())
-                                            {{ $item->schedule->trainers->pluck('trainer_name')->implode(', ') }}
-                                        @else
-                                            {{ $item->consultant_name ?? '---' }}
-                                        @endif
-                                    ">
+                                    <td class="text-start" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="{{ $sched->trainers->pluck('trainer_name')->implode(', ') }}">
                                         <span class="text-muted small">
-                                            @if($item->schedule && $item->schedule->trainers->isNotEmpty())
-                                                {{ $item->schedule->trainers->pluck('trainer_name')->implode('، ') }}
-                                            @else
-                                                {{ $item->consultant_name ?? '---' }}
-                                            @endif
+                                            {{ $sched->trainers->pluck('trainer_name')->implode('، ') ?: '---' }}
                                         </span>
                                     </td>
 
                                     <!-- الإجراءات -->
                                     <td>
-                                        <button type="button"
-                                                wire:click="openScheduleModal({{ $item->id }})"
-                                                class="btn btn-outline-primary btn-sm px-2 py-1 d-inline-flex align-items-center gap-1 shadow-sm">
-                                            <i class="bi bi-calendar-check"></i>
-                                            <span>{{ $item->schedule ? 'تعديل الجدولة' : 'جدولة وتنشيط' }}</span>
-                                        </button>
+                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                            <button type="button"
+                                                    wire:click="openScheduleModal({{ $sched->training_program_id }}, {{ $sched->id }})"
+                                                    class="btn btn-outline-primary btn-sm px-2 py-1"
+                                                    title="تعديل هذا الموعد">
+                                                <i class="bi bi-pencil-square"></i> تعديل
+                                            </button>
+                                            <button type="button"
+                                                    wire:click="deleteSchedule({{ $sched->id }})"
+                                                    wire:confirm="هل أنت متأكد من حذف هذا الموعد للبرنامج؟"
+                                                    class="btn btn-outline-danger btn-sm px-2 py-1"
+                                                    title="حذف هذا الموعد">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                            <button type="button"
+                                                    wire:click="openScheduleModal({{ $sched->training_program_id }})"
+                                                    class="btn btn-outline-success btn-sm px-2 py-1"
+                                                    title="إضافة موعد جديد لنفس البرنامج">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -232,7 +232,7 @@
                                     <td colspan="11" class="text-center py-5 text-muted">
                                         <div class="py-4">
                                             <i class="bi bi-folder2-open display-4 text-secondary opacity-50 mb-2 d-block"></i>
-                                            <span>لا توجد برامج مطابقة لخيارات البحث والحالة الحالية.</span>
+                                            <span>لا توجد مواعيد أو جدولات مطابقة لخيارات البحث.</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -242,9 +242,9 @@
                 </div>
             </div>
 
-            @if($programs->hasPages())
+            @if($schedules->hasPages())
                 <div class="card-footer bg-white py-3 border-top">
-                    {{ $programs->links() }}
+                    {{ $schedules->links() }}
                 </div>
             @endif
         </div>
@@ -255,7 +255,13 @@
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white py-2">
                         <h6 class="modal-title fw-bold">
-                            <i class="bi bi-calendar-event me-1"></i> جدولة وتنشيط البرنامج التدريبي: {{ $selectedProgram->name_ar ?? '' }}
+                            <i class="bi bi-calendar-event me-1"></i>
+                            @if($scheduleId)
+                                تعديل موعد البرنامج التدريبي:
+                            @else
+                                إضافة دورة وجدولة جديدة للبرنامج:
+                            @endif
+                            {{ $selectedProgram->name_ar ?? '' }}
                         </h6>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
@@ -283,7 +289,7 @@
                             <!-- التبويب الأول -->
                             <div class="card border-0 shadow-sm rounded-3 p-3 mb-3 bg-white {{ $activeTab == 1 ? '' : 'd-none' }}">
                                 <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">
-                                    <i class="bi bi-calendar3 me-1"></i> تحديد تواريخ ومكان تنفيذ البرنامج (المدة: {{ $selectedProgram->duration_days }} أيام - استبعاد الجمعة)
+                                    <i class="bi bi-calendar3 me-1"></i> تحديد تواريخ ومكان تنفيذ الدورة (المدة: {{ $selectedProgram->duration_days }} أيام - استبعاد الجمعة)
                                 </h6>
 
                                 <div class="row g-3">

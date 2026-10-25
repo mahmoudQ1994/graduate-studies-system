@@ -82,9 +82,9 @@ class TrainingProgram extends Model
         return $this->hasMany(TrainingProgramApproval::class, 'training_program_id');
     }
 
-    
-    public function schedule()
+
+    public function schedules()
     {
-        return $this->hasOne(TrainingProgramSchedule::class);
+        return $this->hasMany(TrainingProgramSchedule::class, 'training_program_id');
     }
 }

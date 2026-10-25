@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -15,27 +16,29 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class TrainingSchedulesExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithStyles, WithEvents
 {
-    protected $programs;
+    protected $schedules;
 
-    public function __construct($programs)
+    // تم استقبال مجموعة المواعيد التنفيذية مباشرة
+    public function __construct($schedules)
     {
-        $this->programs = $programs;
+        $this->schedules = $schedules;
     }
 
     public function collection()
     {
-        return $this->programs;
+        return $this->schedules;
     }
 
-    public function map($item): array
+    public function map($schedule): array
     {
-        $schedule = $item->schedule;
+        // $schedule هنا يمثل موعد تنفيذ محدد (TrainingProgramSchedule)
+        $item = $schedule->trainingProgram;
 
-        $trainersNames = $schedule && $schedule->trainers->count() > 0
+        $trainersNames = $schedule->trainers->count() > 0
             ? $schedule->trainers->pluck('trainer_name')->implode(', ')
             : ($item->consultant_name ?? '-');
 
-        $trainersTopics = $schedule && $schedule->trainers->count() > 0
+        $trainersTopics = $schedule->trainers->count() > 0
             ? $schedule->trainers->pluck('session_topics')->implode(' | ')
             : '-';
 
@@ -46,30 +49,30 @@ class TrainingSchedulesExport implements FromCollection, WithHeadings, WithMappi
             'completed' => 'تم التنفيذ',
             'cancelled' => 'ملغي'
         ];
-        $statusText = $schedule ? ($statusMap[$schedule->schedule_status] ?? $schedule->schedule_status) : 'غير مجدول';
+        $statusText = $statusMap[$schedule->schedule_status] ?? $schedule->schedule_status;
 
         return [
-            $item->code,
-            $item->name_ar,
-            $item->name_en ?? '-',
-            $item->programType->name ?? '-',
-            $item->level ?? '-',
-            $item->consultant_name ?? '-',
-            $item->duration_days ?? 0,
-            $item->training_hours ?? 0,
-            $item->courses_count_per_year ?? 0,
+            $item ? $item->code : '-',
+            $item ? $item->name_ar : '-',
+            $item && $item->name_en ? $item->name_en : '-',
+            $item && $item->programType ? $item->programType->name : '-',
+            $item && $item->level ? $item->level : '-',
+            $item && $item->consultant_name ? $item->consultant_name : '-',
+            $item ? ($item->duration_days ?? 0) : 0,
+            $item ? ($item->training_hours ?? 0) : 0,
+            $item ? ($item->courses_count_per_year ?? 0) : 0,
             $statusText,
-            $schedule ? $schedule->start_date : '-',
-            $schedule ? $schedule->end_date : '-',
-            $schedule ? $schedule->time_slot : '-',
-            $schedule && $schedule->hall ? $schedule->hall->name : ($item->hall->name ?? '-'),
-            $schedule ? $schedule->max_capacity : '-',
+            $schedule->start_date ?? '-',
+            $schedule->end_date ?? '-',
+            $schedule->time_slot ?? '-',
+            $schedule->hall ? $schedule->hall->name : '-',
+            $schedule->max_capacity ?? '-',
             $trainersNames,
             $trainersTopics,
-            $item->objective_knowledge ?? '-',
-            $item->objective_skills ?? '-',
-            $item->objective_attitude ?? '-',
-            $item->prerequisites ?? '-',
+            $item ? ($item->objective_knowledge ?? '-') : '-',
+            $item ? ($item->objective_skills ?? '-') : '-',
+            $item ? ($item->objective_attitude ?? '-') : '-',
+            $item ? ($item->prerequisites ?? '-') : '-',
         ];
     }
 
@@ -154,7 +157,7 @@ class TrainingSchedulesExport implements FromCollection, WithHeadings, WithMappi
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                // ضبط اتجاه الشيت من اليمين للسيار لتناسب اللغة العربية
+                // ضبط اتجاه الشيت من اليمين لليسار لتناسب اللغة العربية
                 $event->sheet->getDelegate()->setRightToLeft(true);
             },
         ];

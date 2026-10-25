@@ -48,6 +48,8 @@ use App\Livewire\Training\TrainingScheduleManager;
 use App\Livewire\Training\TrainerManager;
 use App\Livewire\Training\TrainerApprovalManager;
 use App\Livewire\Training\TrainersList;
+use App\Livewire\Training\TraineeManager;
+use App\Livewire\Training\JobTitleManager;
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
     return redirect()->route('login');
@@ -178,6 +180,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/halls', HallsManager::class)->name('halls');
         // مسار إدارة أساليب التدريب
         Route::get('/methods', MethodsManager::class)->name('methods');
+        // مسار إدارة المسميات الوظيفية
+        Route::get('/job-titles', JobTitleManager::class)->name('job-titles');
         // مسار إدارة قياسات المعرفة
         Route::get('/knowledge-measurements', KnowledgeManager::class)->name('knowledge-measurements');
         // مسار إدارة قياسات الأثر
@@ -208,6 +212,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/trainers/{trainer}/edit', TrainerManager::class)->name('trainers.edit');
         //مسار حذف بيانات المدرب
         Route::get('/trainers/{trainer}/delete', TrainerManager::class)->name('trainers.delete');
+        // مسار انشاء المتدربين
+        Route::get('/trainees', TraineeManager::class)->name('trainees');
     });
 
 });

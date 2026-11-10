@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Install system dependencies & PHP extensions
+# Install system dependencies & required PHP extensions
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip
 
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Install PHP extensions required by Laravel
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -18,11 +19,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory contents
+# Copy application files
 COPY . /var/www/html
 
-# Install PHP dependencies
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+# Install composer dependencies ignoring platform requirements to prevent failure
+RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 # Set permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -35,4 +36,4 @@ RUN a2enmod rewrite
 
 # Expose port and start Apache
 EXPOSE 80
-CMD apache2-foreground
+CMD ["apache2-foreground"]

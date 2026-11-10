@@ -3,7 +3,7 @@ nixPkgs = ["php82", "composer", "nodejs"]
 
 [phases.build]
 cmds = [
-    "composer install --no-dev --optimize-autoloader --prefer-dist --no-interaction",
+    "composer install --no-interaction --prefer-dist --optimize-autoloader",
     "php artisan config:clear",
     "php artisan view:clear"
 ]

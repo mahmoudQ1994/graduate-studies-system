@@ -50,11 +50,21 @@ use App\Livewire\Training\TrainerApprovalManager;
 use App\Livewire\Training\TrainersList;
 use App\Livewire\Training\TraineeManager;
 use App\Livewire\Training\JobTitleManager;
+use App\Livewire\Public\RegisterTraining;
+use App\Livewire\Training\EnrollmentManager;
+use App\Livewire\Training\AttendedTraineesReport;
+use App\Livewire\Training\DailyAttendanceManager;
+use App\Livewire\Public\TraineeSelfAttendance;
+use App\Livewire\Public\TraineeEvaluation;
+use App\Livewire\Training\ProgramEvaluationReport;
 // التوجيه التلقائي لصفحة تسجيل الدخول عند فتح الموقع
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/trainings/register', RegisterTraining::class)->name('public.trainings.register');
+Route::get('/training/self-attendance/{schedule_id?}', TraineeSelfAttendance::class)->name('training.self-attendance');
+Route::get('/training/evaluation/{schedule_id}', TraineeEvaluation::class)->name('training.evaluation');
 // مسار تسجيل الخروج
 Route::post('/logout', function () {
     Auth::logout();
@@ -214,7 +224,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/trainers/{trainer}/delete', TrainerManager::class)->name('trainers.delete');
         // مسار انشاء المتدربين
         Route::get('/trainees', TraineeManager::class)->name('trainees');
-    });
+        // مسار إدارة تسجيلاّت المتدربين في الدورات
+        Route::get('/enrollments', EnrollmentManager::class)->name('enrollments');
+        //مسار لعرض المتدربين المقبولين بكل برنامج
+        Route::get('/attended-trainees-report', AttendedTraineesReport::class)->name('attended_trainees');
+        //مسار لعرض تسجيل الحضور اليومى للمتدربين
+        Route::get('/daily-attendance-manager', DailyAttendanceManager::class)->name('daily_attendance');
+        //مسار لعرض نافذة التقييمات من المتدربين
+Route::get('/program-evaluation-report', ProgramEvaluationReport::class)->name('program.evaluation.report');    });
 
 });
 

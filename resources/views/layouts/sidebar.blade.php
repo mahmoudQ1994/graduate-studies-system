@@ -349,17 +349,64 @@
                                             <i class="bi bi-calendar-event me-1"></i> جدول ومواعيد المتدربين
                                         </a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.enrollments') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-clipboard-check me-1"></i> إدارة تسجيلاّت المتدربين
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.attended_trainees') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-clipboard-check me-1"></i>  المتدربين بالبرامج
+                                        </a>
+                                    </li>
+                                     <li class="nav-item">
+                                        <a href="{{ route('training.daily_attendance') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-calendar-check me-1"></i>  تسجيل الحضور اليوم
+                                        </a>
+                                    </li>
+
+                                    <li class="nav-item">
+                                        <a href="{{ route('public.trainings.register') }}" target="_blank" class="nav-link py-1 px-2 small text-white opacity-75 text-info">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i> بوابة التسجيل العامة
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </li>
-
-                        <!-- إدخال بيانات متدربين -->
+                          <!-- 4. قائمة متابعة البرامج والتقييمات -->
                         <li class="nav-item">
-                            <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
-                                <i class="bi bi-person-plus me-1"></i> إدخال بيانات متدربين
+                            <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
+                            data-bs-toggle="collapse"
+                            data-bs-parent="#trainingDepartmentMenu"
+                            href="#evaluationAndStatsSubMenu"
+                            role="button"
+                            aria-expanded="false">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-graph-up-arrow fs-6"></i>
+                                    <span>متابعة البرامج والتقييمات</span>
+                                </div>
+                                <i class="bi bi-chevron-down extra-small"></i>
                             </a>
+                            <div class="collapse ms-2 mt-1" id="evaluationAndStatsSubMenu" data-bs-parent="#trainingDepartmentMenu">
+                                <ul class="nav flex-column gap-1 border-start border-secondary ps-2">
+                                    <li class="nav-item">
+                                        <a href="{#" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-bar-chart-fill me-1"></i> إحصائيات تنفيذ البرامج
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="{{ route('training.program.evaluation.report') }}" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-clipboard2-check-fill me-1"></i> متابعة التقييمات والاختبارات
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a href="#" class="nav-link py-1 px-2 small text-white opacity-75">
+                                            <i class="bi bi-link-45deg me-1"></i> إنشاء لينك الاختبارات (قبلي/بعدي)
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </li>
-
                         <!-- قسم الإعدادات (تحت إدارة التدريب مباشرة) -->
                         <li class="nav-item mt-1">
                             <a class="nav-link py-1 px-2 small text-white opacity-75 d-flex align-items-center justify-content-between"
@@ -435,6 +482,7 @@
                                 </ul>
                             </div>
                         </li>
+
 
                     </ul>
                 </div>

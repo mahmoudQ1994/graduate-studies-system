@@ -5,7 +5,16 @@
             <h5 class="fw-bold text-primary mb-0">
                 <i class="bi bi-people-fill me-1"></i> إدارة المتدربين والبيانات الوظيفية
             </h5>
-            <div>
+            <div class="d-flex gap-2">
+                <!-- زر تنزيل البيانات شيت اكسيل -->
+                <button type="button" wire:click="exportTraineesExcel" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-download me-1"></i> تصدير البيانات (Excel)
+                </button>
+                <!-- زر استيراد شيت متدربين إكسيل -->
+                <button type="button" data-bs-toggle="modal" data-bs-target="#importTraineesModal" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-file-earmark-excel me-1"></i> استيراد شيت متدربين (Excel)
+                </button>
+                <!-- زر إضافة متدرب جديد -->
                 <button type="button" wire:click="openTraineeModal" class="btn btn-primary btn-sm">
                     <i class="bi bi-person-plus-fill me-1"></i> إضافة متدرب جديد
                 </button>
@@ -15,6 +24,13 @@
         @if (session()->has('message'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('message') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
@@ -158,17 +174,14 @@
                                 <div class="col-md-6 position-relative">
                                     <label class="form-label fw-bold">الوظيفة:</label>
 
-                                    <!-- حقل مخفي لتخزين اسم الوظيفة المختارة -->
                                     <input type="hidden" wire:model="job_title">
 
-                                    <!-- حقل البحث الحي -->
                                     <input type="text"
                                            class="form-control form-control-sm"
                                            wire:model.live.debounce.300ms="jobTitleSearch"
                                            placeholder="اكتب للبحث عن الوظيفة..."
                                            autocomplete="off">
 
-                                    <!-- القائمة المنسدلة للنتائج المطابقة -->
                                     @if(!empty($this->matchingJobTitles) && $this->matchingJobTitles->isNotEmpty() && $jobTitleSearch !== $job_title)
                                         <div class="card position-absolute w-100 shadow-sm border mt-1" style="z-index: 1050; max-height: 160px; overflow-y: auto;">
                                             <ul class="list-group list-group-flush small mb-0">
@@ -255,6 +268,94 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal رفع شيت المتدربين -->
+        <div wire:ignore.self class="modal fade" id="importTraineesModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white py-2">
+                        <h6 class="modal-title fw-bold">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> استيراد المتدربين من Excel
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body bg-light">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">اختر ملف الإكسيل: *</label>
+                            <input type="file" class="form-control form-control-sm" wire:model="excelFile">
+                            @error('excelFile') <span class="text-danger small">{{ $message }}</span> @enderror
+                            <small class="text-muted d-block mt-2">
+                                ترتيب الأعمدة في الملف: (الاسم، الرقم القومي، الوظيفة، المؤهل، جهة العمل، الموبايل، الايميل)
+                            </small>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="button" wire:click="previewTraineesExcel" class="btn btn-success btn-sm px-3 fw-bold">
+                            <i class="bi bi-eye me-1"></i> مراجعة وفحص الملف
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal معاينة المتدربين قبل الحفظ -->
+        <div wire:ignore.self class="modal fade" id="previewTraineesModal" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark py-2">
+                        <h6 class="modal-title fw-bold">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> مراجعة المتدربين المجهزة للاستيراد
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body bg-light">
+                        @if($duplicatesCount > 0)
+                            <div class="alert alert-danger py-2 small mb-3">
+                                <i class="bi bi-info-circle-fill me-1"></i> تم استبعاد <strong>{{ $duplicatesCount }}</strong> متدرب بسبب تكرار الرقم القومي في النظام أو داخل الملف.
+                            </div>
+                        @endif
+
+                        <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                            <table class="table table-sm table-bordered bg-white text-center small">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>م</th>
+                                        <th>الاسم</th>
+                                        <th>الرقم القومي</th>
+                                        <th>الوظيفة</th>
+                                        <th>جهة العمل</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($previewData as $index => $item)
+                                        <tr>
+                                            <td>{{ $index + 1 }}</td>
+                                            <td class="fw-bold text-start">{{ $item['name_ar'] }}</td>
+                                            <td class="font-monospace">{{ $item['national_id'] }}</td>
+                                            <td>{{ $item['job_title'] }}</td>
+                                            <td>{{ $item['workplace'] }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-muted py-3">لا توجد بيانات صالحة للاستيراد.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">إلغاء</button>
+                        @if(count($previewData) > 0)
+                            <button type="button" wire:click="confirmImportTrainees" class="btn btn-success btn-sm px-3 fw-bold">
+                                <i class="bi bi-check-circle-fill me-1"></i> تأكيد واستيراد البيانات
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     @script
@@ -270,6 +371,23 @@
             if (modal) {
                 modal.hide();
             }
+        });
+
+        $wire.on('close-import-modal', () => {
+            var myModalEl = document.getElementById('importTraineesModal');
+            var modal = bootstrap.Modal.getInstance(myModalEl);
+            if (modal) modal.hide();
+        });
+
+        $wire.on('show-preview-modal', () => {
+            var myModal = new bootstrap.Modal(document.getElementById('previewTraineesModal'));
+            myModal.show();
+        });
+
+        $wire.on('close-preview-modal', () => {
+            var myModalEl = document.getElementById('previewTraineesModal');
+            var modal = bootstrap.Modal.getInstance(myModalEl);
+            if (modal) modal.hide();
         });
     </script>
     @endscript

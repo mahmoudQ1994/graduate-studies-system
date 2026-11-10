@@ -1,17 +1,19 @@
 FROM php:8.2-apache
 
-# Install system dependencies & required PHP extensions
+# Install system dependencies & required libraries for PHP extensions
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libicu-dev \
     zip \
     unzip
 
 # Install PHP extensions required by Laravel
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl
+RUN docker-php-ext-configure intl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -22,7 +24,7 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . /var/www/html
 
-# Install composer dependencies ignoring platform requirements to prevent failure
+# Install composer dependencies ignoring platform requirements
 RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
 # Set permissions for Laravel storage and cache

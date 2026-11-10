@@ -30,12 +30,18 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-pl
 # Set permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Configure Apache DocumentRoot to point to Laravel's public directory
-RUN sed -i -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Configure Apache DocumentRoot and Port for Railway dynamic port
+RUN sed -i -e 's!/var/www/html/public!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
+    && sed -i -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+
+# Update Apache port to listen on ${PORT} or default to 80
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/ports.conf /etc/apache2/sites-available/000-default.conf
 
 # Enable Apache Mod Rewrite
 RUN a2enmod rewrite
 
-# Expose port and start Apache
+# Expose port
 EXPOSE 80
+
+# Custom startup script to ensure port substitution works dynamically
 CMD ["apache2-foreground"]

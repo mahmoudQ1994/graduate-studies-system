@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Install system dependencies & required libraries for PHP extensions
+# Install system dependencies & required libraries
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -14,10 +14,6 @@ RUN apt-get update && apt-get install -y \
 # Install PHP extensions required by Laravel
 RUN docker-php-ext-configure intl \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl
-
-# Fix MPM conflict by disabling event/worker and enabling prefork
-RUN a2dismod mpm_event mpm_worker || true \
-    && a2enmod mpm_prefork
 
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
